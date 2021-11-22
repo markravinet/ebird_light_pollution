@@ -472,16 +472,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontreed90caaa09e90f47c00fe8ecce55f6129581dfb98targetblankd90caaaa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/markravinet/ebird_light_pollution/tree/d90caaa09e90f47c00fe8ecce55f6129581dfb98" target="_blank">d90caaa</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontree6cd543afc07d98f832bb08cd8f0c7e81ef96fad6targetblank6cd543aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/markravinet/ebird_light_pollution/tree/6cd543afc07d98f832bb08cd8f0c7e81ef96fad6" target="_blank">6cd543a</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontreed90caaa09e90f47c00fe8ecce55f6129581dfb98targetblankd90caaaa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontree6cd543afc07d98f832bb08cd8f0c7e81ef96fad6targetblank6cd543aa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/markravinet/ebird_light_pollution/tree/d90caaa09e90f47c00fe8ecce55f6129581dfb98" target="_blank">d90caaa</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/markravinet/ebird_light_pollution/tree/6cd543afc07d98f832bb08cd8f0c7e81ef96fad6" target="_blank">6cd543a</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -491,11 +491,10 @@ Ignored files:
     Ignored:    .DS_Store
 
 Untracked files:
-    Untracked:  analysis/3_preparing_data_for_density_map.Rmd
-    Untracked:  analysis/4_drawing_a_density_map.Rmd
-    Untracked:  analysis/5_extracting_light_pollution_data.Rmd
     Untracked:  data/.here
-    Untracked:  data/house_sparrow_test.txt
+
+Unstaged changes:
+    Modified:   analysis/4_drawing_a_density_map.Rmd
 
 </code></pre>
 <p>
@@ -539,6 +538,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/markravinet/ebird_light_pollution/blob/6cd543afc07d98f832bb08cd8f0c7e81ef96fad6/analysis/2_make_a_simple_occurrence_plot.Rmd" target="_blank">6cd543a</a>
+</td>
+<td>
+markravinet
+</td>
+<td>
+2021-11-22
+</td>
+<td>
+additional fixes
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/markravinet/ebird_light_pollution/84035d35d715e097d9977625210222c72b6bcc8b/docs/2_make_a_simple_occurrence_plot.html" target="_blank">84035d3</a>
+</td>
+<td>
+markravinet
+</td>
+<td>
+2021-11-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/markravinet/ebird_light_pollution/blob/d90caaa09e90f47c00fe8ecce55f6129581dfb98/analysis/2_make_a_simple_occurrence_plot.Rmd" target="_blank">d90caaa</a>
 </td>
 <td>
@@ -560,7 +593,7 @@ add tutorial which uses data
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>In this second tutorial, we will take the data we constructed in the first tutorial and use it to plot an occurrence map of the house sparrow <strong>Passer domesticus</strong> in the UK. Plotting like this is a useful exercise to verify that the data is what we think it is and also is a nice way to help ensure that we have a good idea of what we want to do with the data downstream. In order to achieve plotting in this way, we need to install some additional <code>R</code> packages, which is the focus of our first section.</p>
+<p>In this second tutorial, we will take the data we constructed in the first tutorial and use it to plot an occurrence map of the house sparrow <em>Passer domesticus</em> in the UK. Plotting like this is a useful exercise to verify that the data is what we think it is and also is a nice way to help ensure that we have a good idea of what we want to do with the data downstream. In order to achieve plotting in this way, we need to install some additional <code>R</code> packages, which is the focus of our first section.</p>
 </div>
 <div id="step-1-installing-additional-packages" class="section level2">
 <h2>Step 1: Installing additional packages</h2>
@@ -613,7 +646,7 @@ install.packages(&quot;rgeos&quot;)</code></pre>
 10 House Sparrow     53.1   -1.74  
 # … with 9,751 more rows</code></pre>
 <p>Running this line, you can see that we’ve sampled our 97K dataset to a more manageable ~9,700 samples. Note that the identify of the rows will change each time you run this command because it randomly samples them each time. Try it multiple times and see the latitude and longitude values alter.</p>
-<p><em>NB: when working with your own data, you may not need to run this</em>. Here we subsampled the data simply because the house sparrow is so widespread, populous and common but if you were to work on an extremely rare species, like some of <a href="https://rarest.org/animals/birds">these sad examples</a> you wouldn’t need to do so because there are fewer than 200 individuals and likely only a handful of sightings, if any.</p>
+<p><strong>NB: when working with your own data, you may not need to run this</strong>. Here we subsampled the data simply because the house sparrow is so widespread, populous and common but if you were to work on an extremely rare species, like some of <a href="https://rarest.org/animals/birds">these sad examples</a> you wouldn’t need to do so because there are fewer than 200 individuals and likely only a handful of sightings, if any.</p>
 <p>Finally we need to run a command in order to convert from a <code>data.frame</code> to a spatial feature.</p>
 <pre class="r"><code>house %&gt;%
   dplyr::select(common_name, latitude, longitude) %&gt;%
@@ -655,9 +688,83 @@ Geodetic CRS:  Hu Tzu Shan 1950
 <pre class="r"><code>map &lt;- ggplot(data = uk) + geom_sf() + theme_light()
 map</code></pre>
 <p><img src="figure/2_make_a_simple_occurrence_plot.Rmd/uk_map-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-uk_map-1">
+Past versions of uk_map-1.png
+</button>
+</p>
+<div id="fig-uk_map-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/markravinet/ebird_light_pollution/blob/84035d35d715e097d9977625210222c72b6bcc8b/docs/figure/2_make_a_simple_occurrence_plot.Rmd/uk_map-1.png" target="_blank">84035d3</a>
+</td>
+<td>
+markravinet
+</td>
+<td>
+2021-11-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This should be pretty recognisable as a map of the UK! Next we need to add our bird occurrence data. We have already built the basis of our plot with the <code>ggplot</code> commnand previously. <code>ggplot</code> has a logic that it allows you to build plots in layers. So in order to add our bird data, all we need to do is add a layer that contains the bird data as a spatial object. Here <code>ggplot</code> and <code>sf</code> interact nicely with the <code>geom_sf</code> function. For example:</p>
 <pre class="r"><code>map + geom_sf(data = house_sf, colour = &quot;blue&quot;) + coord_sf()</code></pre>
 <p><img src="figure/2_make_a_simple_occurrence_plot.Rmd/bird_map-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-bird_map-1">
+Past versions of bird_map-1.png
+</button>
+</p>
+<div id="fig-bird_map-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/markravinet/ebird_light_pollution/blob/84035d35d715e097d9977625210222c72b6bcc8b/docs/figure/2_make_a_simple_occurrence_plot.Rmd/bird_map-1.png" target="_blank">84035d3</a>
+</td>
+<td>
+markravinet
+</td>
+<td>
+2021-11-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>And there we have it! A map of the UK with our subsampled point locations of house sparrow sightings. Next up, we’ll learn how to use this data to make predictions about bird density.</p>
 </div>
 <div id="other-resources" class="section level2">
