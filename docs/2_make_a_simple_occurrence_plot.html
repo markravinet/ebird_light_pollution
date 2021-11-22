@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Tutorial 2: Making a simple occurrence plot</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">ebird_light_pollution</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/markravinet/ebird_light_pollution">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Tutorial 2: Making a simple occurrence plot</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-11-22
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ebird_light_pollution/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20211122code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20211122)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20211122code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20211122)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontreed90caaa09e90f47c00fe8ecce55f6129581dfb98targetblankd90caaaa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/markravinet/ebird_light_pollution/tree/d90caaa09e90f47c00fe8ecce55f6129581dfb98" target="_blank">d90caaa</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontreed90caaa09e90f47c00fe8ecce55f6129581dfb98targetblankd90caaaa" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/markravinet/ebird_light_pollution/tree/d90caaa09e90f47c00fe8ecce55f6129581dfb98" target="_blank">d90caaa</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+
+Untracked files:
+    Untracked:  analysis/3_preparing_data_for_density_map.Rmd
+    Untracked:  analysis/4_drawing_a_density_map.Rmd
+    Untracked:  analysis/5_extracting_light_pollution_data.Rmd
+    Untracked:  data/.here
+    Untracked:  data/house_sparrow_test.txt
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/2_make_a_simple_occurrence_plot.Rmd</code>) and HTML (<code>docs/2_make_a_simple_occurrence_plot.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/markravinet/ebird_light_pollution/blob/d90caaa09e90f47c00fe8ecce55f6129581dfb98/analysis/2_make_a_simple_occurrence_plot.Rmd" target="_blank">d90caaa</a>
+</td>
+<td>
+markravinet
+</td>
+<td>
+2021-11-22
+</td>
+<td>
+add tutorial which uses data
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>In this second tutorial, we will take the data we constructed in the first tutorial and use it to plot an occurrence map of the house sparrow <strong>Passer domesticus</strong> in the UK. Plotting like this is a useful exercise to verify that the data is what we think it is and also is a nice way to help ensure that we have a good idea of what we want to do with the data downstream. In order to achieve plotting in this way, we need to install some additional <code>R</code> packages, which is the focus of our first section.</p>
+</div>
+<div id="step-1-installing-additional-packages" class="section level2">
+<h2>Step 1: Installing additional packages</h2>
+<p>To plot our map, we need to install and load some additional packages. These include <code>sf</code> which is used to work with <a href="https://r-spatial.github.io/sf/">spatial features in a simplified manner</a>. The <code>rnaturalearth</code> packages which allow us to <a href="https://cran.r-project.org/web/packages/rnaturalearth/README.html">draw detailed maps</a> and finally <code>rgeos</code> which is <a href="https://cran.r-project.org/web/packages/rgeos/index.html">useful for drawing geometric objects</a>. We install these packages like so:</p>
+<pre class="r"><code>install.packages(&quot;sf&quot;)
+install.packages(&quot;rnaturalearth&quot;)
+install.packages(&quot;rnaturalearthdata&quot;)
+install.packages(&quot;rgeos&quot;)</code></pre>
+<p>Once they are installed, use <code>library</code> to load them all and also don’t forget to load the <code>tidyverse</code> and <code>auk</code> packages. With these packages installed and loaded, we are ready to work towards building our plot.</p>
+</div>
+<div id="step-2-working-with-spatial-data" class="section level2">
+<h2>Step 2: Working with spatial data</h2>
+<p>The very first thing we need to do is load the data that we generated from the first tutorial. We can just read it in using <code>read_ebd</code> from <code>awk</code> like so</p>
+<pre class="r"><code>house &lt;- read_ebd(&quot;./data/house_sparrow_test.txt&quot;, unique = TRUE, rollup = FALSE)</code></pre>
+<p>Next we need to convert this object, which is currently a <code>data.frame</code> object into a spatial object. There is a rich amount of <a href="https://rspatial.org/">spatial data analysis in R</a> and lots of resources online - see the end of the tutorial for more. Here we will use <code>sf</code> or ‘simple features’ a package that is designed to simplify using spatial data.</p>
+<p>Have a look at the <code>house</code> data.frame you have read in. It has a lot of information and we do not need all of it here. First let’s simplify the data so that we can extract the columns containing the common name, the latitude and the longitude of the sampling site. We will do this using the <code>select</code> command from <code>dplyr</code>.</p>
+<pre class="r"><code>house %&gt;%
+  dplyr::select(common_name, latitude, longitude)</code></pre>
+<pre><code># A tibble: 97,611 × 3
+   common_name   latitude longitude
+   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;
+ 1 House Sparrow     54.7     -5.69
+ 2 House Sparrow     54.0     -1.24
+ 3 House Sparrow     54.7     -5.69
+ 4 House Sparrow     50.7     -1.75
+ 5 House Sparrow     54.7     -5.69
+ 6 House Sparrow     53.4     -2.12
+ 7 House Sparrow     53.2     -2.89
+ 8 House Sparrow     54.7     -5.69
+ 9 House Sparrow     55.2     -1.50
+10 House Sparrow     52.7      1.41
+# … with 97,601 more rows</code></pre>
+<p>Running this line does exactly what we wanted - it extracts our selected columns. If you’re not familiar with <code>%&gt;%</code>, it’s a pipe that basically sends the output of the <code>house</code> object to the <code>select</code> command. For more on this and other ways to use <code>dplyr</code> <a href="https://evolutionarygenetics.github.io/Chapter2.html">see here</a>.</p>
+<p>Now one thing you might notice is that this <code>select</code> command produces &gt;97,000 observations. This is a lot and will be a nightmare to plot, so lets add another command which will subsample our data down to a fraction of its size.</p>
+<pre class="r"><code>house %&gt;%
+  dplyr::select(common_name, latitude, longitude) %&gt;%
+  sample_frac(0.1)</code></pre>
+<pre><code># A tibble: 9,761 × 3
+   common_name   latitude longitude
+   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;
+ 1 House Sparrow     52.5    0.0444
+ 2 House Sparrow     55.5   -4.62  
+ 3 House Sparrow     52.0    1.15  
+ 4 House Sparrow     55.0   -1.64  
+ 5 House Sparrow     51.6   -0.828 
+ 6 House Sparrow     53.3   -2.50  
+ 7 House Sparrow     55.6   -4.64  
+ 8 House Sparrow     55.8   -4.62  
+ 9 House Sparrow     55.6   -4.64  
+10 House Sparrow     53.1   -1.74  
+# … with 9,751 more rows</code></pre>
+<p>Running this line, you can see that we’ve sampled our 97K dataset to a more manageable ~9,700 samples. Note that the identify of the rows will change each time you run this command because it randomly samples them each time. Try it multiple times and see the latitude and longitude values alter.</p>
+<p><em>NB: when working with your own data, you may not need to run this</em>. Here we subsampled the data simply because the house sparrow is so widespread, populous and common but if you were to work on an extremely rare species, like some of <a href="https://rarest.org/animals/birds">these sad examples</a> you wouldn’t need to do so because there are fewer than 200 individuals and likely only a handful of sightings, if any.</p>
+<p>Finally we need to run a command in order to convert from a <code>data.frame</code> to a spatial feature.</p>
+<pre class="r"><code>house %&gt;%
+  dplyr::select(common_name, latitude, longitude) %&gt;%
+  sample_frac(0.1) %&gt;%
+  st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236)</code></pre>
+<pre><code>Simple feature collection with 9761 features and 1 field
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: -7.600007 ymin: 49.89156 xmax: 1.756268 ymax: 60.8094
+Geodetic CRS:  Hu Tzu Shan 1950
+# A tibble: 9,761 × 2
+   common_name                geometry
+ * &lt;chr&gt;                   &lt;POINT [°]&gt;
+ 1 House Sparrow  (-4.636236 55.55115)
+ 2 House Sparrow  (-2.186861 53.46492)
+ 3 House Sparrow  (-1.962631 53.46515)
+ 4 House Sparrow  (-4.634349 55.54936)
+ 5 House Sparrow   (-5.20627 49.95964)
+ 6 House Sparrow  (0.0213718 52.92948)
+ 7 House Sparrow  (-2.964055 51.54284)
+ 8 House Sparrow (-0.1479596 51.38058)
+ 9 House Sparrow  (-7.402477 57.18821)
+10 House Sparrow    (1.39432 51.15726)
+# … with 9,751 more rows</code></pre>
+<p>Here the <code>st_as_sf</code> function identifies the latitude and longitude columns with the <code>coords</code> argument and then sets the <a href="https://rspatial.org/raster/spatial/6-crs.html">coordinate reference system</a> with <code>crs</code>.</p>
+<p>With this done, we just need to ensure that we assign our command to an R object; here we’ll use <code>house_sf</code>. This is easily done like so:</p>
+<pre class="r"><code>house_sf &lt;- house %&gt;%
+  dplyr::select(common_name, latitude, longitude) %&gt;%
+  sample_frac(0.1) %&gt;%
+  st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236)</code></pre>
+<p>Now we have a spatial dataset that we are ready to plot.</p>
+</div>
+<div id="step-4-building-an-occurrence-plot" class="section level2">
+<h2>Step 4: Building an occurrence plot</h2>
+<p>In order to build a plot, we will use <code>ggplot</code>. There are multiple ways to plot maps in <code>R</code> and I will provide some further resources at the end of the tutorial. However in my opinion, this is the easiest and most logical approach.</p>
+<p>Remember we are going to plot the occurrence of the house sparrow across the UK so in order to do this, we need to get a map of the UK. We do so using functions from the <code>Rnaturalearth</code> packages like so:</p>
+<pre class="r"><code>uk &lt;- ne_countries(country = &quot;united kingdom&quot;, scale = &quot;medium&quot;, returnclass = &quot;sf&quot;)</code></pre>
+<p>Feel free to take a look at this object in <code>R</code>. As you will see, it is a polygon which can be drawn as a map. We can draw it like so:</p>
+<pre class="r"><code>map &lt;- ggplot(data = uk) + geom_sf() + theme_light()
+map</code></pre>
+<p><img src="figure/2_make_a_simple_occurrence_plot.Rmd/uk_map-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This should be pretty recognisable as a map of the UK! Next we need to add our bird occurrence data. We have already built the basis of our plot with the <code>ggplot</code> commnand previously. <code>ggplot</code> has a logic that it allows you to build plots in layers. So in order to add our bird data, all we need to do is add a layer that contains the bird data as a spatial object. Here <code>ggplot</code> and <code>sf</code> interact nicely with the <code>geom_sf</code> function. For example:</p>
+<pre class="r"><code>map + geom_sf(data = house_sf, colour = &quot;blue&quot;) + coord_sf()</code></pre>
+<p><img src="figure/2_make_a_simple_occurrence_plot.Rmd/bird_map-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And there we have it! A map of the UK with our subsampled point locations of house sparrow sightings. Next up, we’ll learn how to use this data to make predictions about bird density.</p>
+</div>
+<div id="other-resources" class="section level2">
+<h2>Other resources</h2>
+<ul>
+<li><a href="https://rspatial.org/">rspatial - a collection of tutorials on using R for spatial data</a></li>
+<li><a href="https://r-spatial.org/r/2018/10/25/ggplot2-sf.html">a guide to making maps in R</a></li>
+<li><a href="http://r-statistics.co/Complete-Ggplot2-Tutorial-Part1-With-R-Code.html">getting to grips with ggplot2</a></li>
+<li><a href="https://evolutionarygenetics.github.io/Chapter2.html">my tutorial on ggplot2 and the tidyverse</a></li>
+</ul>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.2 (2021-11-01)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Catalina 10.15.7
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_GB.UTF-8/en_GB.UTF-8/en_GB.UTF-8/C/en_GB.UTF-8/en_GB.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] forcats_0.5.1           stringr_1.4.0           dplyr_1.0.7            
+ [4] purrr_0.3.4             readr_2.0.2             tidyr_1.1.4            
+ [7] tibble_3.1.5            ggplot2_3.3.5           tidyverse_1.3.1        
+[10] rgeos_0.5-8             sp_1.4-5                rnaturalearthdata_0.1.0
+[13] rnaturalearth_0.1.0     sf_1.0-3                auk_0.5.1              
+[16] here_1.0.1              workflowr_1.6.2        
+
+loaded via a namespace (and not attached):
+ [1] httr_1.4.2         bit64_4.0.5        vroom_1.5.5        jsonlite_1.7.2    
+ [5] modelr_0.1.8       assertthat_0.2.1   highr_0.9          cellranger_1.1.0  
+ [9] yaml_2.2.1         pillar_1.6.4       backports_1.3.0    lattice_0.20-45   
+[13] glue_1.5.0         digest_0.6.28      promises_1.2.0.1   rvest_1.0.2       
+[17] colorspace_2.0-2   htmltools_0.5.2    httpuv_1.6.3       pkgconfig_2.0.3   
+[21] broom_0.7.10       haven_2.4.3        s2_1.0.7           scales_1.1.1      
+[25] whisker_0.4        later_1.3.0        tzdb_0.2.0         git2r_0.28.0      
+[29] proxy_0.4-26       farver_2.1.0       generics_0.1.1     ellipsis_0.3.2    
+[33] withr_2.4.2        cli_3.1.0          magrittr_2.0.1     crayon_1.4.2      
+[37] readxl_1.3.1       evaluate_0.14      fs_1.5.0           fansi_0.5.0       
+[41] xml2_1.3.2         class_7.3-19       tools_4.1.2        hms_1.1.1         
+[45] lifecycle_1.0.1    munsell_0.5.0      reprex_2.0.1       compiler_4.1.2    
+[49] jquerylib_0.1.4    e1071_1.7-9        rlang_0.4.12       classInt_0.4-3    
+[53] units_0.7-2        grid_4.1.2         rstudioapi_0.13    rmarkdown_2.11    
+[57] wk_0.5.0           gtable_0.3.0       DBI_1.1.1          R6_2.5.1          
+[61] lubridate_1.8.0    knitr_1.36         bit_4.0.4          fastmap_1.1.0     
+[65] utf8_1.2.2         rprojroot_2.0.2    KernSmooth_2.23-20 stringi_1.7.5     
+[69] parallel_4.1.2     Rcpp_1.0.7         vctrs_0.3.8        dbplyr_2.1.1      
+[73] tidyselect_1.1.1   xfun_0.28         </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
