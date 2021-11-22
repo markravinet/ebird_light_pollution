@@ -1,0 +1,80 @@
+---
+title: 'Tutorial 3: Preparing data for a density map'
+output:
+  html_document: 
+    theme: simplex
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+library(auk)
+
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In the last tutorial, we learned how to extract spatial data for plotting sightings of bird species. Now we want to go over our initial introduction to extracting data from ebird in order to repeat the process but this time with predicting population densities in mind.
+
+### Step 1: Setting up
+
+For this particular tutorial, we only need a single R library - `auk`. We load it up the standard way
+
+```{r setup_demo, eval = FALSE, echo = TRUE}
+library(auk)
+```
+
+Next, we set the ebird data path - this is exactly the same as before:
+
+```{r path_setup, eval = FALSE, echo = TRUE}
+# set ebd path
+auk_set_ebd_path("./ebd_GB_relSep-2020/", overwrite = TRUE)
+```
+
+We then need to tell `auk` the names of our ebird data file. 
+
+```{r ebird_data, eval = FALSE, echo = TRUE}
+# set input file - this is the ebd data
+ebd_file <- "./ebd_GB_relSep-2020/ebd_GB_relSep-2020.txt"
+```
+
+This next part is where we diverge from our [original tutorial](https://markravinet.github.io/1_reading_data_with_ebird.html). We should also provide `auk` with a path tothe ebird sample data. This is also in our ebird directory but last time we didn't bother with it.
+
+```{r, ebird_sample, eval = FALSE, echo = TRUE}
+# set the ebd_sample data path - this is for the sample data
+ebd_sample <- "./ebd_GB_relSep-2020/ebd_sampling_relSep-2020_filtered.txt"
+```
+
+What is the sample data? Basically this is a list of checklists provided to ebird users when they record their sightings. For example, imagine you go on a birding walk through University Park. If you use ebird, you will be given a checklist that allows you to record the species you see. Crucially, this will also record the species you *do not* see. Thus the sample data allows us to generate presence/absence data.
+
+### Step 2 - Set `auk` filters
+
+Now that we've told auk where the data is and the paths for the data files, we're ready to apply a filter. We do this in exactly the same way as we did before. Except this time we also tell `auk_ebd` where our sample data is.
+
+```{r ebird_filter, eval = FALSE, echo = TRUE}
+# read the ebd data file and apply some filters to extract species
+my_filter <- auk_ebd(ebd_file, file_sampling = ebd_sample) %>% 
+  auk_species(c("House sparrow")) %>%
+  auk_country("GB") %>%
+  auk_complete() %>%
+  auk_date(c("2017-01-01", "2018-01-01"))
+```
+
+We've also done something else a bit different here - we extracted house sparrow data from 2017. This is just to demonstrate that there is temporal data within the ebird dataset and as we will see later, this could potentially be very informative for our analyses.
+
+One other addition is the `auk_complete` function. This is done to ensure only complete checklists are included in the sample data. This essentially removes any checklists in the sample data that were not finished and that could compromise our presence/absence estimates.
+
+### Step 3 - Apply `auk` filters
+
+Now that we've set the filters we need to extract information on UK house sparrows between 1992 and 2018, we just need to apply them!
+
+```{r apply_filter, echo = TRUE, eval = FALSE}
+output_ebd <- "house_sparrow_test_2017.txt"
+output_sampling <- "house_sparrow_test_sampling_2017.txt"
+
+auk_filter(my_filter, file = output_ebd, file_sampling = output_sampling, overwrite = TRUE)
+```
+
+Note that we set the output data and sampling file paths first. It's worth noting that we used a suffix of `_2017` in order to denote the year. This will be useful in the future.
+
+That's it for now! You can try plotting this again like you did with [tutorial 2](https://markravinet.github.io/2_make_a_simple_occurrence_plot.html) if you want. Otherwise in the next tutorial, we'll proceed to drawing a density map. 
