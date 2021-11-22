@@ -1,0 +1,179 @@
+---
+title: 'Tutorial 5: Extracting light pollution data'
+output:
+  html_document: 
+    theme: simplex
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+library(rgdal)
+library(tidyverse)
+library(raster)
+library(sf)
+library(auk)
+
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Now that we know how to draw a density map based on predicted presence/absence, we're now ready to extract the light pollution data. Our aim here is to extract the mean light pollution, as measured by satellite imaging for the centre of the grid squares that are the same as our bird density estimates. This tutorial will show you the code to do this and also help you write it in a way that is easy to extend for different years if you should choose to look at how the relationship between presence/absence varies over time.
+
+
+### Step 1: Installing packages and getting the data
+
+For this tutorial, we are only using packages we have already worked with, so we just need to load them like so:
+
+```{r install, eval = FALSE, echo = TRUE}
+library(rgdal)
+library(tidyverse)
+library(raster)
+library(sf)
+library(auk)
+```
+
+Next we need to get hold of our light pollution data. We're going to use the data from [Yu et al (2018)](https://www.nature.com/articles/s41597-020-0510-y) who integrate multiple satellite sources of light pollution data from 1992-2018 into a single dataset, which we can [download here](https://doi.org/10.6084/m9.figshare.9828827.v2). You should download the data for 2017 and 2018 and place it in your project directory. To make things easier, put that data, which is stored as a `.tif` inside a sub-directory called `light_pollution_data`. We will explore what this data is later.
+
+Next, we're going to set up a variable right at the start of our script. We do this like so.
+
+```{r variable, echo = TRUE, eval = FALSE}
+my_year <- "2017"
+```
+
+Note that this variable is a character, not numeric. This because we're going to use it in a `paste0` command shortly. `paste0` just allows you to combine character vectors together. For example:
+
+```{r paste_example, echo = TRUE, eval = FALSE}
+paste0("I got my pet dog in ", my_year)
+```
+
+Why are we doing this? Because using `paste0` we can set up our script so that we only ever need to alter the `my_year` variable in order to read in data from multiple years. With `my_year` set, we can then make the file names necessary for working with our data:
+
+```{r setfile_paths1, echo = TRUE, eval = FALSE}
+# make light file path
+light_infile <- paste0("./light_pollution_data/Harmonized_DN_NTL_", my_year, "_simVIIRS.tif")
+# make output filepath
+output_file <- paste0("house_sparrow_light_data_", my_year, ".csv")
+```
+
+You'll remember from the [previous tutorial](4_drawing_a_density_map.html) that we also set a `_2017.txt` suffix on our house sparrow data - i.e. `house_sparrow_test_2017.txt`. This means we can use `paste0` for those file paths too, i.e. if we had data from multiple years.
+
+```{r setfile_paths2, echo = TRUE, eval = FALSE}
+# set paths for ebd data
+sparrow_ebd <- paste0("house_sparrow_test_", my_year, ".txt")
+sparrow_sample <- paste0("house_sparrow_test_sampling_", my_year, ".txt")
+```
+
+### Step 2: Taking a look at the light data
+
+Now that all our data paths are set, we are ready to take a look at the data. Let's start with the light, since we're not familiar with it. First we read in the light data as a [raster file](https://en.wikipedia.org/wiki/Raster_graphics).
+
+```{r light_raster, eval = FALSE, echo = TRUE}
+light <- raster(light_infile)
+```
+
+Next, we can plot it to make sure that it works:
+
+```{r plot_light, eval = FALSE, echo = TRUE}
+plot(light)
+```
+
+This might take a few moments but once it works, you'll see a map that resembles the world map with a scale of 0 to 63 (although 60 is the max value displayed). This is a good moment to explore what this data actually is. It's essentially a composite of many different satellite images. For each pixel of that image, a digital number (DN) is calculated. This is equivalent to the brightness of the pixel, such that 0 has no brightness whereas 63 is maximum brightness.
+
+### Step 3: Sorting out the bird data
+
+Now that we have the light data read in, it's time to read in the bird data again. A lot of this will be familiar from the [previous tutorial](4_drawing_a_density_map.html), so I will not explain it in detail. See [tutorial 4](4_drawing_a_density_map.html) for more details. 
+
+```{r bird_data_setup, echo = FALSE, eval = FALSE}
+# read in the ebird data 
+house <- read_ebd(sparrow_ebd, unique = TRUE, rollup = FALSE)
+
+# perform zerofilling to get presence absence data
+house_zf <- auk_zerofill(sparrow_ebd, sparrow_sample)
+
+# running the command collapse_zf will combine the checklist and the sample data
+house_zf_c <- collapse_zerofill(house_zf) 
+```
+
+### Step 4: Extracting the light pollution data
+
+At this point, we have our light and our bird data read in to the R environment. What we need to do next is take the coordinates of our bird observations and then extract the corresponding light pollution measurements for them. This is quite easy with some basic `dplyr` commands.
+
+We can also use our `my_year` variable to extract only the observations from our data for that specific year. For example:
+
+```{r extract1, echo = FALSE, eval = FALSE}
+house_zf_c %>% 
+  dplyr::filter(grepl(my_year, observation_date))
+```
+
+Here we used `filter` in order to extract all values of `observation_date` that contains `"2017` - i.e. the value of `my_year` in this example. However, that returns a lot of data which we don't actually need. All we're interested in is the `latitude` and `longitude.` So we use `select` to obtain those only:
+
+```{r extract2, echo = FALSE, eval = FALSE}
+house_zf_c %>% 
+  dplyr::filter(grepl(my_year, observation_date)) %>%
+  dplyr::select(longitude, latitude)
+```
+
+OK, now you've seen how this works, we can assign the output of this command to an object we'll call `points`:
+
+```{r extract3, echo = FALSE, eval = FALSE}
+points <- house_zf_c %>% 
+  dplyr::filter(grepl(my_year, observation_date)) %>%
+  dplyr::select(longitude, latitude)
+```
+
+All we need to do now is use the `raster::extract` function to extract the light data for those specific points:
+
+```{r light_extract, echo = FALSE, eval = FALSE}
+bird_light <- extract(light, points)
+```
+
+Have a look at the `bird_light` object - it is a vector of the pixel values for each of the coordinate points in our bird data. But this is **only** the light data, so what we want to do next is construct a `tibble` data frame with the light and bird observation data combined.
+
+Again, we can do this with `dplyr` commands. We'll break it down, step-by-step.
+
+```{r bird_light_setup1, eval = FALSE, echo = TRUE}
+house_zf_c %>% 
+  dplyr::filter(grepl(my_year, observation_date)) 
+```
+
+This first step is identical to one we've already run. It simply extracts all of the bird data where the `observation_data` matches the `my_year` object - `"2017"` in this case. Next we extend the code:
+
+```{r bird_light_setup2, eval = FALSE, echo = TRUE}
+house_zf_c %>% 
+  dplyr::filter(grepl(my_year, observation_date)) %>%
+  dplyr::select(checklist_id, country, state, county, county_code,
+                latitude, longitude, observation_date,
+                scientific_name, observation_count, species_observed) 
+```
+
+Here we're using the `select` function to extract columns of interest. Most of these should be pretty self explanatory. The reason we do this is to make our dataset a bit more manageable - i.e. the principle of [tidy data](https://r4ds.had.co.nz/tidy-data.html).
+
+The only thing missing now is the light data. We can add this like so using `mutate`. 
+
+```{r bird_light_setup3, eval = FALSE, echo = TRUE}
+house_zf_c %>% 
+  dplyr::filter(grepl(my_year, observation_date)) %>%
+  dplyr::select(checklist_id, country, state, county, county_code,
+                latitude, longitude, observation_date,
+                scientific_name, observation_count, species_observed) %>%
+  mutate(light = bird_light)
+```
+
+Look closely at the output here and you'll see we added a column called `mutate`. It's worth spending some time now to just look through the data frame and make sure you've understood what was done here. Moving on however, we need to assign the output from this code to a new object, which we'll call `house2` here.
+
+```{r bird_light_setup4, eval = FALSE, echo = TRUE}
+house2 <- house_zf_c %>% 
+  dplyr::filter(grepl(my_year, observation_date)) %>%
+  dplyr::select(checklist_id, country, state, county, county_code,
+                latitude, longitude, observation_date,
+                scientific_name, observation_count, species_observed) %>%
+  mutate(light = bird_light)
+```
+
+This is the data we'll be doing downstream statistical analyses on! Finally!! So the last step is to make sure we store it properly - i.e. we write it out here.
+
+```{r write_out, eval = FALSE, echo = TRUE}
+write_csv(house2, output_file)
+```
+
