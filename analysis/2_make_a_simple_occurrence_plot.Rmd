@@ -20,7 +20,7 @@ library(tidyverse)
 
 ## Introduction
 
-In this second tutorial, we will take the data we constructed in the first tutorial and use it to plot an occurrence map of the house sparrow **Passer domesticus** in the UK. Plotting like this is a useful exercise to verify that the data is what we think it is and also is a nice way to help ensure that we have a good idea of what we want to do with the data downstream. In order to achieve plotting in this way, we need to install some additional `R` packages, which is the focus of our first section.
+In this second tutorial, we will take the data we constructed in the first tutorial and use it to plot an occurrence map of the house sparrow *Passer domesticus* in the UK. Plotting like this is a useful exercise to verify that the data is what we think it is and also is a nice way to help ensure that we have a good idea of what we want to do with the data downstream. In order to achieve plotting in this way, we need to install some additional `R` packages, which is the focus of our first section.
 
 ## Step 1: Installing additional packages
 
@@ -64,7 +64,7 @@ house %>%
 
 Running this line, you can see that we've sampled our 97K dataset to a more manageable ~9,700 samples. Note that the identify of the rows will change each time you run this command because it randomly samples them each time. Try it multiple times and see the latitude and longitude values alter.
 
-*NB: when working with your own data, you may not need to run this*. Here we subsampled the data simply because the house sparrow is so widespread, populous and common but if you were to work on an extremely rare species, like some of [these sad examples](https://rarest.org/animals/birds) you wouldn't need to do so because there are fewer than 200 individuals and likely only a handful of sightings, if any.
+**NB: when working with your own data, you may not need to run this**. Here we subsampled the data simply because the house sparrow is so widespread, populous and common but if you were to work on an extremely rare species, like some of [these sad examples](https://rarest.org/animals/birds) you wouldn't need to do so because there are fewer than 200 individuals and likely only a handful of sightings, if any.
 
 Finally we need to run a command in order to convert from a `data.frame` to a spatial feature. 
 

@@ -77,4 +77,4 @@ auk_filter(my_filter, file = output_ebd, file_sampling = output_sampling, overwr
 
 Note that we set the output data and sampling file paths first. It's worth noting that we used a suffix of `_2017` in order to denote the year. This will be useful in the future.
 
-That's it for now! You can try plotting this again like you did with [tutorial 2](https://markravinet.github.io/2_make_a_simple_occurrence_plot.html) if you want. Otherwise in the next tutorial, we'll proceed to drawing a density map. 
+That's it for now! You can try plotting this again like you did with [tutorial 2](2_make_a_simple_occurrence_plot.html) if you want. Otherwise in the next tutorial, we'll proceed to drawing a density map. 
