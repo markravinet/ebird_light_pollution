@@ -1,0 +1,219 @@
+---
+title: 'Tutorial 4:Drawing a density map'
+output:
+  html_document: 
+    theme: simplex
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+library(auk)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata) # necessary to draw a detailed map
+library(rgeos)
+library(raster)
+library(rgdal)
+library(viridis)
+
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Back in [tutorial 2](https://markravinet.github.io/2_make_a_simple_occurrence_plot.html) we learned how to make an occurrence map. Here we'll draw a map again but this time it will be a density map. In order to do that, we need to estimate density from our ebird sightings. This involves a little more work than just simply plotting occurrence! The aim of this tutorial is to take us through those steps. 
+
+### Step 1: Installing packages and setting up
+
+Many of the packages we used for [making the occurrence map](https://markravinet.github.io/2_make_a_simple_occurrence_plot.html) are relevant here, but there are a couple of additional ones we need to install this time. We install them like so:
+
+```{r install, eval = FALSE, echo = TRUE}
+install.packages("raster")
+install.packages("rgdal")
+install.packages("viridis")
+```
+
+What are these packages? `raster` is a [spatial data package](https://cran.r-project.org/web/packages/raster/index.html) that allows the visualisation and analysis of [raster files](https://datacarpentry.org/organization-geospatial/01-intro-raster-data/). These are essentially images where each pixel corresponds to a geographical location. A classic example would be a satellite image of a given location. `rgdal` is [another package involved in geospatial analysis](https://cran.r-project.org/web/packages/rgdal/index.html) that we need in order to convert data. Finally, `viridis` is a [package which enables a colour mapping scheme](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html) that is useful for plotting data - but especially spatial density data.
+
+Once we've installed those packages, we load them all with `library`. We also load `auk` and `tidyverse` just in case we need them.
+
+```{r package_load, eval = FALSE, echo = TRUE}
+library(auk)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(rgeos)
+library(raster)
+library(rgdal)
+library(viridis)
+```
+
+The next thing we need to do is set the paths for the data files that we created at the end of [tutorial 3](https://markravinet.github.io/3_preparing_data_for_density_map.html). Remember this is our filtered sparrow occurrence and sampling data.
+
+```{r set_paths, eval = TRUE, echo = TRUE}
+# set paths for ebd data
+sparrow_ebd <- "./data/house_sparrow_test_2017.txt"
+sparrow_sample <- "./data/house_sparrow_test_sampling_2017.txt"
+```
+
+We're now fully set up and ready to proceed with the next steps.
+
+### Step 2: Getting the data ready with auk
+
+The first few functions we need to run are quite familiar already. We first need to read in our ebird data using `auk` functions:
+
+```{r read_ebd, eval = TRUE, echo = TRUE}
+# read in the ebird data 
+house <- read_ebd(sparrow_ebd, unique = TRUE, rollup = FALSE)
+```
+
+However, unlike before we also need to perform something called zerofilling. As mentioned before, data is input into ebird using checklists where observers note down which species they saw or did not see. It is this checklist data, contained in the sample data from [tutorial 3](https://markravinet.github.io/3_preparing_data_for_density_map.html) that we will use for zerofilling and ultimately, to create a presence or absence score for our spatial maps. Doing the zerofilling is quite straightforward:
+
+```{r zerofill, eval = TRUE, echo = TRUE}
+house_zf <- auk_zerofill(sparrow_ebd, sparrow_sample)
+```
+
+We can compare our two objects - `house` and `house_zf` - to see the difference this has made. Look in particular at the difference in observations and the number of rows in each `tibble`:
+
+```{r data_compare, eval = FALSE, echo = TRUE}
+# first we can compare the two objects
+house 
+house_zf 
+# lets look at the observations
+house_zf$observations # some will be zero - i.e. no birds recorded
+house_zf$sampling_events # we can also examine the sampling events too
+```
+
+Next we need to combine our checklist and sample data with the `collapse_zerofill` function. This will provide us with the data we need to make the occurrence map.
+
+```{r collapse_zero, eval = FALSE, echo = TRUE}
+collapse_zerofill(house_zf) 
+```
+
+Here we just ran this command as a demonstration, but we'll actually run it for real in the next section.
+
+### Step 3: Extracting the data for plotting
+
+For this step, we are going to ultimately extract the latitude and longitude of our species observations, convert them and then end with a dataframe we can use for plotting our map. We'll build this command up step by step.
+
+The first part we're familiar with - zerofilling - yet this time we're going to assign the output to an object.
+
+```{r extract_data1, eval = FALSE, echo = TRUE}
+checklists_sf <- collapse_zerofill(house_zf)
+```
+
+Here we will combine commands using the `%>%` pipe command which you can [find more info on here](https://evolutionarygenetics.github.io/Chapter2.html). The next step, we will extract the coordinates and convert them to the coordinate reference system we will use in our map. Remember to recall the `checklists_sf` object each time in order to see the differences in what is happening here.
+
+```{r extract_data2, eval = FALSE, echo = TRUE}
+checklists_sf <- collapse_zerofill(house_zf) %>%
+  # this extracts coordinates
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4236)
+```
+
+With our latitude and longitude transformed, we then need to do a projection on to a grid reference system, like so:
+
+```{r extract_data3, eval = FALSE, echo = TRUE}
+checklists_sf <- collapse_zerofill(house_zf) %>%
+  # this extracts coordinates
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4236) %>%
+  # this projects the presence absence data across an equal area
+  st_transform(crs ="+proj=laea +lat_0=44 +lon_0=-71.70") 
+```
+
+If you're checking each time, you'll see that the main thing changing here is not the data structure, but the metainformation at the head of the data.frame that encodes the spatial data projection and specification.
+
+Next things will get a bit trickier - we are going to extract some information on the species in the dataset.
+
+```{r extract_data4, eval = FALSE, echo = TRUE}
+checklists_sf <- collapse_zerofill(house_zf) %>%
+  # this extracts coordinates
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4236) %>%
+  # this projects the presence absence data across an equal area
+  st_transform(crs ="+proj=laea +lat_0=44 +lon_0=-71.70") %>%
+  # this bit gets the species information
+  inner_join(ebird_taxonomy %>% 
+               dplyr::select(species_code, scientific_name, common_name),
+             by = "scientific_name")
+```
+
+Now the dataset has altered - we have taken the `ebird_taxonomy` data.frame and extracted the `species_code`, `scientific_name` and `common_name` columns (all of which should be self-explanatory) and then joined these using `inner_join` to our coordinate data. This is actually a bit redundant here but if we were extracting data for multiple species at once, this would allow us to separate out their data.
+
+For the final step, we will extract the data we actually are interested in from the dataset using `dplyr::select`.
+
+```{r extract_data5, eval = TRUE, echo = TRUE}
+checklists_sf <- collapse_zerofill(house_zf) %>%
+  # this extracts coordinates
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4236) %>%
+  # this projects the presence absence data across an equal area
+  st_transform(crs ="+proj=laea +lat_0=44 +lon_0=-71.70") %>%
+  # this bit gets the species information
+  inner_join(ebird_taxonomy %>% 
+               dplyr::select(species_code, scientific_name, common_name),
+             by = "scientific_name") %>% 
+  # finally we extract the data we want 
+  dplyr::select(species_code, common_name, scientific_name, species_observed)
+```
+
+If you look at `checklists_sf` now you'll see all we have is the species names, whether or not it was observed and the latitude and longitude of the positions.
+
+### Step 4: Preparing the map
+
+We're nearly ready to plot our data! First we need to initialise the UK map. We do this by getting the data from the `naturalearth` dataset. We'll also convert that from an `sf` to an `st` class object.
+
+```{r setup_ukmap, eval = TRUE, echo = TRUE}
+# we extract the UK map data
+uk <- ne_countries(country = "united kingdom", scale = "medium", returnclass = "sf") 
+# we need to convert the uk data in one more step to make it plottable
+uk <- uk %>% st_geometry()
+```
+
+With this done, we need to run a few steps to make our data ready to plot. Previously with the occurence map, we plotted **points**. Now we're plotting presence/absence data in pixels, so we need to convert our data to a raster format. 
+
+```{r convert_raster, eval = TRUE, echo = TRUE}
+r_template <- raster(as(checklists_sf, "Spatial"))
+```
+
+With presence/absence data for each pixel, we can set a resolution to estimate the mean probability of observing a species across a spatial area. This is also known as density. We set this resolution in units of metres but express it as km - here we will use 5000 or a 5km resolution.
+
+```{r resolution_set, eval = TRUE, echo = TRUE}
+res(r_template) <- 5000
+```
+
+Then we extract species names - this is only really necessary if we are to plot more than one species (not the case here but I'll show you how anyway):
+
+```{r extract_spp_name, eval = TRUE, echo = TRUE}
+species <- unique(checklists_sf$species_code)
+```
+
+With our data, our raster format and our resolution we are now ready to calculate the density or frequency of occurence over our grid resolution. We'll also make sure the orientation is correct for our UK map.
+
+```{r calc_freq, eval = TRUE, echo = TRUE}
+#  calculate the frequency of occurrence
+r_freq <- rasterize(checklists_sf, r_template, field = "species_observed", fun = mean)
+# correct projection
+r_freq2 <- projectRaster(r_freq, crs = crs(uk))
+```
+
+In the first function, the `fun = mean` argument is what allows us to estimate the mean probability a species is observed. We could use other functions here - i.e. `max` would give the max probability, `median` the median and so on.
+
+### Step 5: Plotting
+
+With all these steps taken, we're now finally ready to plot. Firstly, we'll do this in base R.
+
+```{r base_plot, eval = TRUE, echo = TRUE}
+# next we plot the frequency of occurrence data
+plot(r_freq2, las = 1, col = viridis(100))
+# and finally we can add the outline of the UK
+plot(uk, add = T)
+```
+
+And with `ggplot2`
+
+```{r ggplot, eval = TRUE, echo = T}
+r_freq3 <- r_freq2 %>% rasterToPoints() %>% as_tibble()
+ggplot(r_freq3) + geom_tile(aes(x = x, y = y, fill = layer)) + 
+  geom_sf(data = uk, fill = NA) + coord_sf()
+```
+
