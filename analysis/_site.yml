@@ -1,7 +1,7 @@
-name: "ebird_light_pollution"
+name: ebird_light_pollution
 output_dir: ../docs
 navbar:
-  title: "ebird_light_pollution"
+  title: ebird_light_pollution
   left:
   - text: Home
     href: index.html
@@ -9,6 +9,10 @@ navbar:
     href: about.html
   - text: License
     href: license.html
+  right:
+  - icon: fa-github
+    text: Source code
+    href: https://github.com/markravinet/ebird_light_pollution
 output:
   workflowr::wflow_html:
     toc: yes
