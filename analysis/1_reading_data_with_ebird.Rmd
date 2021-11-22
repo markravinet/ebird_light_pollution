@@ -1,0 +1,117 @@
+---
+title: "Tutorial 1: Accessing and reading ebird data"
+output: 
+  html_document: 
+    theme: simplex
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(here)
+library(auk)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+For this tutorial, we will learn how to use `R` to interact with data from the [ebird repository](https://ebird.org/home). eBird is a database maintained by the Cornell Lab of Ornithology and there is a lot of support, information and tutorials for using this sort of data available online (see the end of the tutorial for more information). We will be using the `auk` package in order to access this data and to get it into a more useable format.
+
+## Step 1: Installing the `auk` package
+
+[ebird ](https://ebird.org/home) has a huge amount of data stored on it, with over 600 million observations of birds across the world. You can access it via a browser with the front-end information, but if you'd like to use it for data analysis, you need to interact with the database itself.
+
+One way to do this is using `auk` which is specifically designed by the Cornell Lab of Ornithology to interact with ebird in R. The naming of `auk` is a pun, an [auk is a sea bird](https://en.wikipedia.org/wiki/Auk) but `AWK` is also a Unix programming utility that is useful for interacting with text and runs in the background.
+
+However, because `AWK` is specifically for Unix, unless you have a Mac or Linux machine, you need to install some other tools first.
+
+### Pre-installation: Mac and Linux users
+
+You don't need to do anything so you can proceed to the next step!
+
+### Pre-installation: Windows users
+
+If you have a Windows machine, you will need to install [cygwin](https://www.cygwin.com/) which is an emulator for Unix on Windows. 
+
+### Installing the package via R
+
+Once you are ready to install the package, all you need to do is the following:
+
+```{r install, eval = FALSE, echo = TRUE}
+install.packages("auk") # you only need to do this once
+library(auk)
+```
+
+You are now ready to use `auk`
+
+## Step 2: Setting the ebird directory
+
+In order to interact with ebird data, you need to download it to your local machine and tell auk where to look for it. First you will need to make a request for the data you are interested in via ebird [here](https://ebird.org/data/download/ebd). You can download the entire dataset, but for now as you get used to the data, it is best to just choose a specific species and location.
+
+The next thing you need to do is place the data somewhere you can access it. The easiest way to do this is to [create a project using RStudio](https://swcarpentry.github.io/r-novice-gapminder/02-project-intro/) and placing the directory with the data inside that. 
+
+For now we will use a filtered version of the September 2020 ebird release in order to demonstrate the principles of how to interact with the data. The first thing we need to do is to tell `auk` where to find the ebird data. We do this like so:
+
+```{r set_path, eval = FALSE, echo = TRUE}
+auk_set_ebd_path("./ebd_GB_relSep-2020/", overwrite = TRUE)
+```
+
+Note here that we are setting a path, so the `./` just indicates this directory is in the directory R is operating in. To see where that is, you should use `getwd()`. For more effective control over directories, files and paths I recommend using the [`here` package](https://github.com/r-lib/here).
+
+Next up, we need to tell `auk` where to find the data file. We'll use a filtered down one here to make life a little easier. 
+
+```{r set_file, eval = FALSE, echo = TRUE}
+ebd_file <- "./ebd_GB_relSep-2020/ebd_GB_relSep-2020_filtered.txt"
+```
+
+Now we're ready to access data!
+
+## Step 3: Accessing data with `auk`
+
+The way that `auk` works to access data is that you essentially build a command that introduces a series of filters to the main dataset
+
+In this example, we will filter the dataset for all observations of house sparrows from the UK between 2018 and 2020. Here's how to achieve this:
+
+```{r set_filters, eval = FALSE, echo = TRUE}
+my_filter <- auk_ebd(ebd_file) %>% 
+  auk_species(c("House sparrow")) %>%
+  auk_country("GB") %>%
+  auk_date(c("2018-01-01", "2020-09-01"))
+```
+
+Two things to note. Firstly, auk is built to align with the principles of [tidyR](https://tidyr.tidyverse.org/) and the [tidyverse](https://www.tidyverse.org/. If you are not familiar with this, see [here for a short introduction](https://evolutionarygenetics.github.io/Chapter2.html).
+
+Secondly the filters are not actually applied yet. We've just made the command. You can verify this for yourself by typing `my_filter` into the command line.
+
+*NB* you might get a warning about taxonomy - this is because ebird updates its taxonomic database for each year. Unless you are working with very rare species, this probably won't be too much of an issue.
+
+Next we need to do a bit of groundwork before applying our filter to the main dataset. Essentially, we should set up the name of our output file.
+
+```{r prep_output, eval = FALSE, echo = TRUE}
+output <- "house_sparrow_test.txt"
+```
+
+With that done, we can now run the auk filters. This will filter the main data, write it to the output file we have specified and because of the `overwrite = TRUE` argument, overwrite any previously created files with the same name as `output`. This step might take a while to run, but once it has, we will be able to read our data back into R!
+
+```{r apply_filter, eval = FALSE, echo = TRUE}
+auk_filter(my_filter, file = output, overwrite = TRUE)
+```
+
+## Step 4 : Reading data back into R
+
+Essentially, once we filter the ebird database, we write our results out to a file and then we are able to read them back in. We can do this like so:
+
+```{r read_data, eval = FALSE, echo = TRUE}
+house <- read_ebd("./house_sparrow_test.txt", unique = TRUE, rollup = FALSE)
+```
+
+What have we done here? The `rollup = TRUE` rollup deals with taxonomic uncertainty - this is not such an issue for common UK birds. It essentially merges records for birds where the species is uncertain, here we set it to off since it takes a while to run. However, we do need to run `unique = TRUE` as this will ensure any duplicate records are combined. For example, if a group is birding and they are all recording their data in ebird, they are likely to make multiple records. 
+
+This is essentially all the data we need for the next step, but do spend the time to have a look at the table you have created. Think about how many observations there are, what the columns show and how you could manipulate it. 
+
+## Other resources
+- [Auk homepage](https://cornelllabofornithology.github.io/auk/)
+- [Introduction to AUK](https://cran.r-project.org/web/packages/auk/vignettes/auk.html)
+
+
+

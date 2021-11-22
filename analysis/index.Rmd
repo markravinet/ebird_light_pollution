@@ -8,4 +8,16 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+### Introduction
+
+Welcome to the homepage for the analysis of ebird data in R. The aim of these tutorials is to introduce MSci students to the steps needed to draw occurrence maps, build a presence/absence probability dataset and analyse this alongside light pollution data.
+
+The tutorials are as follows:
+
+1. [Reading data with ebird](1_reading_data_with_ebird.html)
+2. [Making a simple occurrence plot](2_make_a_simple_occurrence_plot.html)
+3. [Preparing data for a density map](3_preparing_data_for_density_map.html)
+4. [Drawing a density map](4_drawing_a_density_map.html)
+5. [Extracting light pollution data](5_extracting_light_pollution_data.html)
+
+Enjoy!
