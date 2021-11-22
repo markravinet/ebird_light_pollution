@@ -1,0 +1,129 @@
+---
+title: 'Tutorial 2: Making a simple occurrence plot'
+output:
+  html_document: 
+    theme: simplex
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+library(here)
+library(auk)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata) 
+library(rgeos)
+library(tidyverse)
+
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In this second tutorial, we will take the data we constructed in the first tutorial and use it to plot an occurrence map of the house sparrow **Passer domesticus** in the UK. Plotting like this is a useful exercise to verify that the data is what we think it is and also is a nice way to help ensure that we have a good idea of what we want to do with the data downstream. In order to achieve plotting in this way, we need to install some additional `R` packages, which is the focus of our first section.
+
+## Step 1: Installing additional packages
+
+To plot our map, we need to install and load some additional packages. These include `sf` which is used to work with [spatial features in a simplified manner](https://r-spatial.github.io/sf/). The `rnaturalearth` packages which allow us to [draw detailed maps](https://cran.r-project.org/web/packages/rnaturalearth/README.html) and finally `rgeos` which is [useful for drawing geometric objects](https://cran.r-project.org/web/packages/rgeos/index.html). We install these packages like so:
+
+```{r install, include = TRUE, eval = FALSE}
+install.packages("sf")
+install.packages("rnaturalearth")
+install.packages("rnaturalearthdata")
+install.packages("rgeos")
+```
+
+Once they are installed, use `library` to load them all and also don't forget to load the `tidyverse` and `auk` packages. With these packages installed and loaded, we are ready to work towards building our plot.
+
+## Step 2: Working with spatial data
+
+The very first thing we need to do is load the data that we generated from the first tutorial. We can just read it in using `read_ebd` from `awk` like so
+
+```{r load_data, include = TRUE, eval = TRUE}
+house <- read_ebd("./data/house_sparrow_test.txt", unique = TRUE, rollup = FALSE)
+```
+
+Next we need to convert this object, which is currently a `data.frame` object into a spatial object. There is a rich amount of [spatial data analysis in R ](https://rspatial.org/) and lots of resources online - see the end of the tutorial for more. Here we will use `sf` or 'simple features' a package that is designed to simplify using spatial data.
+
+Have a look at the `house` data.frame you have read in. It has a lot of information and we do not need all of it here. First let's simplify the data so that we can extract the columns containing the common name, the latitude and the longitude of the sampling site. We will do this using the `select` command from `dplyr`.
+
+```{r select_data, include = TRUE, eval = TRUE, echo = TRUE}
+house %>%
+  dplyr::select(common_name, latitude, longitude)
+```
+
+Running this line does exactly what we wanted - it extracts our selected columns. If you're not familiar with `%>%`, it's a pipe that basically sends the output of the `house` object to the `select` command. For more on this and other ways to use `dplyr` [see here](https://evolutionarygenetics.github.io/Chapter2.html). 
+
+Now one thing you might notice is that this `select` command produces >97,000 observations. This is a lot and will be a nightmare to plot, so lets add another command which will subsample our data down to a fraction of its size.
+
+```{r subsample_data, include = TRUE, eval = TRUE, echo = TRUE}
+house %>%
+  dplyr::select(common_name, latitude, longitude) %>%
+  sample_frac(0.1)
+```
+
+Running this line, you can see that we've sampled our 97K dataset to a more manageable ~9,700 samples. Note that the identify of the rows will change each time you run this command because it randomly samples them each time. Try it multiple times and see the latitude and longitude values alter.
+
+*NB: when working with your own data, you may not need to run this*. Here we subsampled the data simply because the house sparrow is so widespread, populous and common but if you were to work on an extremely rare species, like some of [these sad examples](https://rarest.org/animals/birds) you wouldn't need to do so because there are fewer than 200 individuals and likely only a handful of sightings, if any.
+
+Finally we need to run a command in order to convert from a `data.frame` to a spatial feature. 
+
+```{r convert_data, include = TRUE, eval = TRUE, echo = TRUE}
+house %>%
+  dplyr::select(common_name, latitude, longitude) %>%
+  sample_frac(0.1) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4236)
+```
+
+Here the `st_as_sf` function identifies the latitude and longitude columns with the `coords` argument and then sets the [coordinate reference system](https://rspatial.org/raster/spatial/6-crs.html) with `crs`.
+
+With this done, we just need to ensure that we assign our command to an R object; here we'll use `house_sf`. This is easily done like so:
+
+```{r convert_data_final, include = TRUE, eval = TRUE, echo = TRUE}
+house_sf <- house %>%
+  dplyr::select(common_name, latitude, longitude) %>%
+  sample_frac(0.1) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4236)
+```
+
+Now we have a spatial dataset that we are ready to plot.
+
+## Step 4: Building an occurrence plot
+
+In order to build a plot, we will use `ggplot`. There are multiple ways to plot maps in `R` and I will provide some further resources at the end of the tutorial. However in my opinion, this is the easiest and most logical approach.
+
+Remember we are going to plot the occurrence of the house sparrow across the UK so in order to do this, we need to get a map of the UK. We do so using functions from the `Rnaturalearth` packages like so:
+
+```{r uk_data, include = TRUE, eval = TRUE, echo = TRUE}
+uk <- ne_countries(country = "united kingdom", scale = "medium", returnclass = "sf")
+```
+
+Feel free to take a look at this object in `R`. As you will see, it is a polygon which can be drawn as a map. We can draw it like so:
+
+```{r uk_map, include = TRUE, eval = TRUE, echo = TRUE}
+map <- ggplot(data = uk) + geom_sf() + theme_light()
+map
+```
+
+This should be pretty recognisable as a map of the UK! Next we need to add our bird occurrence data. We have already built the basis of our plot with the `ggplot` commnand previously. `ggplot` has a logic that it allows you to build plots in layers. So in order to add our bird data, all we need to do is add a layer that contains the bird data as a spatial object. Here `ggplot` and `sf` interact nicely with the `geom_sf` function. For example:
+
+```{r bird_map, include = TRUE, eval = TRUE, echo = TRUE}
+map + geom_sf(data = house_sf, colour = "blue") + coord_sf()
+```
+
+And there we have it! A map of the UK with our subsampled point locations of house sparrow sightings. Next up, we'll learn how to use this data to make predictions about bird density.
+
+## Other resources
+- [rspatial - a collection of tutorials on using R for spatial data](https://rspatial.org/)
+- [a guide to making maps in R](https://r-spatial.org/r/2018/10/25/ggplot2-sf.html)
+- [getting to grips with ggplot2](http://r-statistics.co/Complete-Ggplot2-Tutorial-Part1-With-R-Code.html)
+- [my tutorial on ggplot2 and the tidyverse](https://evolutionarygenetics.github.io/Chapter2.html)
+
+
+
+
+
+
+
+
+
