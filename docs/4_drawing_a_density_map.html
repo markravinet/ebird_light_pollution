@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Tutorial 4:Drawing a density map</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">ebird_light_pollution</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/markravinet/ebird_light_pollution">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Tutorial 4:Drawing a density map</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-11-22
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ebird_light_pollution/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20211122code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20211122)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20211122code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20211122)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontree04dfea0efcdde6c502d1b1ae209d7d24bb01031ctargetblank04dfea0a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/markravinet/ebird_light_pollution/tree/04dfea0efcdde6c502d1b1ae209d7d24bb01031c" target="_blank">04dfea0</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontree04dfea0efcdde6c502d1b1ae209d7d24bb01031ctargetblank04dfea0a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/markravinet/ebird_light_pollution/tree/04dfea0efcdde6c502d1b1ae209d7d24bb01031c" target="_blank">04dfea0</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+
+Untracked files:
+    Untracked:  analysis/5_extracting_light_pollution_data.Rmd
+    Untracked:  data/.here
+    Untracked:  data/house_sparrow_test.txt
+    Untracked:  data/house_sparrow_test_2017.txt
+    Untracked:  data/house_sparrow_test_sampling_2017.txt
+
+Unstaged changes:
+    Modified:   analysis/2_make_a_simple_occurrence_plot.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/4_drawing_a_density_map.Rmd</code>) and HTML (<code>docs/4_drawing_a_density_map.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/markravinet/ebird_light_pollution/blob/04dfea0efcdde6c502d1b1ae209d7d24bb01031c/analysis/4_drawing_a_density_map.Rmd" target="_blank">04dfea0</a>
+</td>
+<td>
+markravinet
+</td>
+<td>
+2021-11-22
+</td>
+<td>
+add tutorial 4
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Back in <a href="https://markravinet.github.io/2_make_a_simple_occurrence_plot.html">tutorial 2</a> we learned how to make an occurrence map. Here we’ll draw a map again but this time it will be a density map. In order to do that, we need to estimate density from our ebird sightings. This involves a little more work than just simply plotting occurrence! The aim of this tutorial is to take us through those steps.</p>
+<div id="step-1-installing-packages-and-setting-up" class="section level3">
+<h3>Step 1: Installing packages and setting up</h3>
+<p>Many of the packages we used for <a href="https://markravinet.github.io/2_make_a_simple_occurrence_plot.html">making the occurrence map</a> are relevant here, but there are a couple of additional ones we need to install this time. We install them like so:</p>
+<pre class="r"><code>install.packages(&quot;raster&quot;)
+install.packages(&quot;rgdal&quot;)
+install.packages(&quot;viridis&quot;)</code></pre>
+<p>What are these packages? <code>raster</code> is a <a href="https://cran.r-project.org/web/packages/raster/index.html">spatial data package</a> that allows the visualisation and analysis of <a href="https://datacarpentry.org/organization-geospatial/01-intro-raster-data/">raster files</a>. These are essentially images where each pixel corresponds to a geographical location. A classic example would be a satellite image of a given location. <code>rgdal</code> is <a href="https://cran.r-project.org/web/packages/rgdal/index.html">another package involved in geospatial analysis</a> that we need in order to convert data. Finally, <code>viridis</code> is a <a href="https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html">package which enables a colour mapping scheme</a> that is useful for plotting data - but especially spatial density data.</p>
+<p>Once we’ve installed those packages, we load them all with <code>library</code>. We also load <code>auk</code> and <code>tidyverse</code> just in case we need them.</p>
+<pre class="r"><code>library(auk)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(rgeos)
+library(raster)
+library(rgdal)
+library(viridis)</code></pre>
+<p>The next thing we need to do is set the paths for the data files that we created at the end of <a href="https://markravinet.github.io/3_preparing_data_for_density_map.html">tutorial 3</a>. Remember this is our filtered sparrow occurrence and sampling data.</p>
+<pre class="r"><code># set paths for ebd data
+sparrow_ebd &lt;- &quot;./data/house_sparrow_test_2017.txt&quot;
+sparrow_sample &lt;- &quot;./data/house_sparrow_test_sampling_2017.txt&quot;</code></pre>
+<p>We’re now fully set up and ready to proceed with the next steps.</p>
+</div>
+<div id="step-2-getting-the-data-ready-with-auk" class="section level3">
+<h3>Step 2: Getting the data ready with auk</h3>
+<p>The first few functions we need to run are quite familiar already. We first need to read in our ebird data using <code>auk</code> functions:</p>
+<pre class="r"><code># read in the ebird data 
+house &lt;- read_ebd(sparrow_ebd, unique = TRUE, rollup = FALSE)</code></pre>
+<p>However, unlike before we also need to perform something called zerofilling. As mentioned before, data is input into ebird using checklists where observers note down which species they saw or did not see. It is this checklist data, contained in the sample data from <a href="https://markravinet.github.io/3_preparing_data_for_density_map.html">tutorial 3</a> that we will use for zerofilling and ultimately, to create a presence or absence score for our spatial maps. Doing the zerofilling is quite straightforward:</p>
+<pre class="r"><code>house_zf &lt;- auk_zerofill(sparrow_ebd, sparrow_sample)</code></pre>
+<p>We can compare our two objects - <code>house</code> and <code>house_zf</code> - to see the difference this has made. Look in particular at the difference in observations and the number of rows in each <code>tibble</code>:</p>
+<pre class="r"><code># first we can compare the two objects
+house 
+house_zf 
+# lets look at the observations
+house_zf$observations # some will be zero - i.e. no birds recorded
+house_zf$sampling_events # we can also examine the sampling events too</code></pre>
+<p>Next we need to combine our checklist and sample data with the <code>collapse_zerofill</code> function. This will provide us with the data we need to make the occurrence map.</p>
+<pre class="r"><code>collapse_zerofill(house_zf) </code></pre>
+<p>Here we just ran this command as a demonstration, but we’ll actually run it for real in the next section.</p>
+</div>
+<div id="step-3-extracting-the-data-for-plotting" class="section level3">
+<h3>Step 3: Extracting the data for plotting</h3>
+<p>For this step, we are going to ultimately extract the latitude and longitude of our species observations, convert them and then end with a dataframe we can use for plotting our map. We’ll build this command up step by step.</p>
+<p>The first part we’re familiar with - zerofilling - yet this time we’re going to assign the output to an object.</p>
+<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf)</code></pre>
+<p>Here we will combine commands using the <code>%&gt;%</code> pipe command which you can <a href="https://evolutionarygenetics.github.io/Chapter2.html">find more info on here</a>. The next step, we will extract the coordinates and convert them to the coordinate reference system we will use in our map. Remember to recall the <code>checklists_sf</code> object each time in order to see the differences in what is happening here.</p>
+<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf) %&gt;%
+  # this extracts coordinates
+  st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236)</code></pre>
+<p>With our latitude and longitude transformed, we then need to do a projection on to a grid reference system, like so:</p>
+<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf) %&gt;%
+  # this extracts coordinates
+  st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236) %&gt;%
+  # this projects the presence absence data across an equal area
+  st_transform(crs =&quot;+proj=laea +lat_0=44 +lon_0=-71.70&quot;) </code></pre>
+<p>If you’re checking each time, you’ll see that the main thing changing here is not the data structure, but the metainformation at the head of the data.frame that encodes the spatial data projection and specification.</p>
+<p>Next things will get a bit trickier - we are going to extract some information on the species in the dataset.</p>
+<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf) %&gt;%
+  # this extracts coordinates
+  st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236) %&gt;%
+  # this projects the presence absence data across an equal area
+  st_transform(crs =&quot;+proj=laea +lat_0=44 +lon_0=-71.70&quot;) %&gt;%
+  # this bit gets the species information
+  inner_join(ebird_taxonomy %&gt;% 
+               dplyr::select(species_code, scientific_name, common_name),
+             by = &quot;scientific_name&quot;)</code></pre>
+<p>Now the dataset has altered - we have taken the <code>ebird_taxonomy</code> data.frame and extracted the <code>species_code</code>, <code>scientific_name</code> and <code>common_name</code> columns (all of which should be self-explanatory) and then joined these using <code>inner_join</code> to our coordinate data. This is actually a bit redundant here but if we were extracting data for multiple species at once, this would allow us to separate out their data.</p>
+<p>For the final step, we will extract the data we actually are interested in from the dataset using <code>dplyr::select</code>.</p>
+<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf) %&gt;%
+  # this extracts coordinates
+  st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236) %&gt;%
+  # this projects the presence absence data across an equal area
+  st_transform(crs =&quot;+proj=laea +lat_0=44 +lon_0=-71.70&quot;) %&gt;%
+  # this bit gets the species information
+  inner_join(ebird_taxonomy %&gt;% 
+               dplyr::select(species_code, scientific_name, common_name),
+             by = &quot;scientific_name&quot;) %&gt;% 
+  # finally we extract the data we want 
+  dplyr::select(species_code, common_name, scientific_name, species_observed)</code></pre>
+<p>If you look at <code>checklists_sf</code> now you’ll see all we have is the species names, whether or not it was observed and the latitude and longitude of the positions.</p>
+</div>
+<div id="step-4-preparing-the-map" class="section level3">
+<h3>Step 4: Preparing the map</h3>
+<p>We’re nearly ready to plot our data! First we need to initialise the UK map. We do this by getting the data from the <code>naturalearth</code> dataset. We’ll also convert that from an <code>sf</code> to an <code>st</code> class object.</p>
+<pre class="r"><code># we extract the UK map data
+uk &lt;- ne_countries(country = &quot;united kingdom&quot;, scale = &quot;medium&quot;, returnclass = &quot;sf&quot;) 
+# we need to convert the uk data in one more step to make it plottable
+uk &lt;- uk %&gt;% st_geometry()</code></pre>
+<p>With this done, we need to run a few steps to make our data ready to plot. Previously with the occurence map, we plotted <strong>points</strong>. Now we’re plotting presence/absence data in pixels, so we need to convert our data to a raster format.</p>
+<pre class="r"><code>r_template &lt;- raster(as(checklists_sf, &quot;Spatial&quot;))</code></pre>
+<p>With presence/absence data for each pixel, we can set a resolution to estimate the mean probability of observing a species across a spatial area. This is also known as density. We set this resolution in units of metres but express it as km - here we will use 5000 or a 5km resolution.</p>
+<pre class="r"><code>res(r_template) &lt;- 5000</code></pre>
+<p>Then we extract species names - this is only really necessary if we are to plot more than one species (not the case here but I’ll show you how anyway):</p>
+<pre class="r"><code>species &lt;- unique(checklists_sf$species_code)</code></pre>
+<p>With our data, our raster format and our resolution we are now ready to calculate the density or frequency of occurence over our grid resolution. We’ll also make sure the orientation is correct for our UK map.</p>
+<pre class="r"><code>#  calculate the frequency of occurrence
+r_freq &lt;- rasterize(checklists_sf, r_template, field = &quot;species_observed&quot;, fun = mean)
+# correct projection
+r_freq2 &lt;- projectRaster(r_freq, crs = crs(uk))</code></pre>
+<p>In the first function, the <code>fun = mean</code> argument is what allows us to estimate the mean probability a species is observed. We could use other functions here - i.e. <code>max</code> would give the max probability, <code>median</code> the median and so on.</p>
+</div>
+<div id="step-5-plotting" class="section level3">
+<h3>Step 5: Plotting</h3>
+<p>With all these steps taken, we’re now finally ready to plot. Firstly, we’ll do this in base R.</p>
+<pre class="r"><code># next we plot the frequency of occurrence data
+plot(r_freq2, las = 1, col = viridis(100))
+# and finally we can add the outline of the UK
+plot(uk, add = T)</code></pre>
+<p><img src="figure/4_drawing_a_density_map.Rmd/base_plot-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And with <code>ggplot2</code></p>
+<pre class="r"><code>r_freq3 &lt;- r_freq2 %&gt;% rasterToPoints() %&gt;% as_tibble()
+ggplot(r_freq3) + geom_tile(aes(x = x, y = y, fill = layer)) + 
+  geom_sf(data = uk, fill = NA) + coord_sf()</code></pre>
+<p><img src="figure/4_drawing_a_density_map.Rmd/ggplot-1.png" width="672" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.2 (2021-11-01)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Catalina 10.15.7
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_GB.UTF-8/en_GB.UTF-8/en_GB.UTF-8/C/en_GB.UTF-8/en_GB.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] viridis_0.6.2           viridisLite_0.4.0       rgdal_1.5-27           
+ [4] raster_3.5-2            rgeos_0.5-8             sp_1.4-5               
+ [7] rnaturalearthdata_0.1.0 rnaturalearth_0.1.0     sf_1.0-3               
+[10] forcats_0.5.1           stringr_1.4.0           dplyr_1.0.7            
+[13] purrr_0.3.4             readr_2.0.2             tidyr_1.1.4            
+[16] tibble_3.1.5            ggplot2_3.3.5           tidyverse_1.3.1        
+[19] auk_0.5.1               workflowr_1.6.2        
+
+loaded via a namespace (and not attached):
+ [1] fs_1.5.0           lubridate_1.8.0    bit64_4.0.5        httr_1.4.2        
+ [5] rprojroot_2.0.2    tools_4.1.2        backports_1.3.0    utf8_1.2.2        
+ [9] R6_2.5.1           KernSmooth_2.23-20 DBI_1.1.1          colorspace_2.0-2  
+[13] withr_2.4.2        tidyselect_1.1.1   gridExtra_2.3      bit_4.0.4         
+[17] compiler_4.1.2     git2r_0.28.0       cli_3.1.0          rvest_1.0.2       
+[21] xml2_1.3.2         labeling_0.4.2     scales_1.1.1       classInt_0.4-3    
+[25] proxy_0.4-26       digest_0.6.28      rmarkdown_2.11     pkgconfig_2.0.3   
+[29] htmltools_0.5.2    highr_0.9          dbplyr_2.1.1       fastmap_1.1.0     
+[33] rlang_0.4.12       readxl_1.3.1       rstudioapi_0.13    farver_2.1.0      
+[37] jquerylib_0.1.4    generics_0.1.1     jsonlite_1.7.2     vroom_1.5.5       
+[41] magrittr_2.0.1     s2_1.0.7           Rcpp_1.0.7         munsell_0.5.0     
+[45] fansi_0.5.0        lifecycle_1.0.1    terra_1.4-11       stringi_1.7.5     
+[49] whisker_0.4        yaml_2.2.1         grid_4.1.2         parallel_4.1.2    
+[53] promises_1.2.0.1   crayon_1.4.2       lattice_0.20-45    haven_2.4.3       
+[57] hms_1.1.1          knitr_1.36         pillar_1.6.4       codetools_0.2-18  
+[61] wk_0.5.0           reprex_2.0.1       glue_1.5.0         evaluate_0.14     
+[65] modelr_0.1.8       vctrs_0.3.8        tzdb_0.2.0         httpuv_1.6.3      
+[69] cellranger_1.1.0   gtable_0.3.0       assertthat_0.2.1   xfun_0.28         
+[73] broom_0.7.10       e1071_1.7-9        later_1.3.0        class_7.3-19      
+[77] units_0.7-2        ellipsis_0.3.2    </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
