@@ -1,5 +1,5 @@
 ---
-title: 'Tutorial 5: Predicting the relationship between light pollution and density'
+title: 'Tutorial 6: Predicting the relationship between light pollution and density'
 output:
   html_document: 
     theme: simplex
