@@ -11,7 +11,7 @@
 
 
 
-<title>Tutorial 4:Drawing a density map</title>
+<title>Tutorial 5: Predicting the relationship between light pollution and density</title>
 
 <script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -356,7 +356,7 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Tutorial 4:Drawing a density map</h1>
+<h1 class="title toc-ignore">Tutorial 5: Predicting the relationship between light pollution and density</h1>
 
 </div>
 
@@ -507,7 +507,7 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <div id="versions" class="tab-pane fade">
 
 <p>
-These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/4_drawing_a_density_map.Rmd</code>) and HTML (<code>docs/4_drawing_a_density_map.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/6_predicting_density_and_light_pollution.Rmd</code>) and HTML (<code>docs/6_predicting_density_and_light_pollution.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -536,7 +536,7 @@ Message
 Rmd
 </td>
 <td>
-<a href="https://github.com/markravinet/ebird_light_pollution/blob/5d285b422fe7f2976146d713906f42e962e8da9f/analysis/4_drawing_a_density_map.Rmd" target="_blank">5d285b4</a>
+<a href="https://github.com/markravinet/ebird_light_pollution/blob/5d285b422fe7f2976146d713906f42e962e8da9f/analysis/6_predicting_density_and_light_pollution.Rmd" target="_blank">5d285b4</a>
 </td>
 <td>
 markravinet
@@ -548,40 +548,6 @@ markravinet
 tutorial 6
 </td>
 </tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/markravinet/ebird_light_pollution/74ac27dff52afb4efcd940c3140b13b2d926ae25/docs/4_drawing_a_density_map.html" target="_blank">74ac27d</a>
-</td>
-<td>
-markravinet
-</td>
-<td>
-2021-11-22
-</td>
-<td>
-Build site.
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/markravinet/ebird_light_pollution/blob/04dfea0efcdde6c502d1b1ae209d7d24bb01031c/analysis/4_drawing_a_density_map.Rmd" target="_blank">04dfea0</a>
-</td>
-<td>
-markravinet
-</td>
-<td>
-2021-11-22
-</td>
-<td>
-add tutorial 4
-</td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -591,196 +557,68 @@ add tutorial 4
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>Back in <a href="2_make_a_simple_occurrence_plot.html">tutorial 2</a> we learned how to make an occurrence map. Here we’ll draw a map again but this time it will be a density map. In order to do that, we need to estimate density from our ebird sightings. This involves a little more work than just simply plotting occurrence! The aim of this tutorial is to take us through those steps.</p>
-<div id="step-1-installing-packages-and-setting-up" class="section level3">
-<h3>Step 1: Installing packages and setting up</h3>
-<p>Many of the packages we used for <a href="2_make_a_simple_occurrence_plot.html">making the occurrence map</a> are relevant here, but there are a couple of additional ones we need to install this time. We install them like so:</p>
-<pre class="r"><code>install.packages(&quot;raster&quot;)
-install.packages(&quot;rgdal&quot;)
-install.packages(&quot;viridis&quot;)</code></pre>
-<p>What are these packages? <code>raster</code> is a <a href="https://cran.r-project.org/web/packages/raster/index.html">spatial data package</a> that allows the visualisation and analysis of <a href="https://datacarpentry.org/organization-geospatial/01-intro-raster-data/">raster files</a>. These are essentially images where each pixel corresponds to a geographical location. A classic example would be a satellite image of a given location. <code>rgdal</code> is <a href="https://cran.r-project.org/web/packages/rgdal/index.html">another package involved in geospatial analysis</a> that we need in order to convert data. Finally, <code>viridis</code> is a <a href="https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html">package which enables a colour mapping scheme</a> that is useful for plotting data - but especially spatial density data.</p>
-<p>Once we’ve installed those packages, we load them all with <code>library</code>. We also load <code>auk</code> and <code>tidyverse</code> just in case we need them.</p>
+<p>In the <a href="5_extracting_light_pollution_data.html">last tutorial</a>, we extracted the light pollution data for the points of occurence of our bird species. This time, we will read that data back into R and then predict the relationship between the two. There are some similarities here to what we did when we drew a density map, so it may be worth looking over <a href="4_drawing_a_density_map.html">that tutorial if needed</a>.</p>
+<div id="step-1-installing-packages-and-getting-the-data" class="section level3">
+<h3>Step 1: Installing packages and getting the data</h3>
+<p>We are once again only using packages we have already worked with, so we just need to load them like so:</p>
 <pre class="r"><code>library(auk)
 library(tidyverse)
 library(sf)
 library(rnaturalearth)
-library(rnaturalearthdata)
+library(rnaturalearthdata) # necessary to draw a detailed map
 library(rgeos)
 library(raster)
 library(rgdal)
 library(viridis)</code></pre>
-<p>The next thing we need to do is set the paths for the data files that we created at the end of <a href="3_preparing_data_for_density_map.html">tutorial 3</a>. Remember this is our filtered sparrow occurrence and sampling data.</p>
-<pre class="r"><code># set paths for ebd data
-sparrow_ebd &lt;- &quot;./data/house_sparrow_test_2017.txt&quot;
-sparrow_sample &lt;- &quot;./data/house_sparrow_test_sampling_2017.txt&quot;</code></pre>
-<p>We’re now fully set up and ready to proceed with the next steps.</p>
+<p>Next we need to read in the species and light pollution data we created in the last tutorial. We can set the filepath variable first. We will also set the outpath variable too.</p>
+<pre class="r"><code>filepath &lt;- &quot;./house_sparrow_light_data_2017.csv&quot;
+outfile &lt;- &quot;./house_2017_light_occurrence_prediction.csv&quot;</code></pre>
+<p>Then we just in the data like so:</p>
+<pre class="r"><code>my_data &lt;- read_csv(filepath)</code></pre>
+<p>We are now ready to filter it for our analysis. We will do this in the next section.</p>
 </div>
-<div id="step-2-getting-the-data-ready-with-auk" class="section level3">
-<h3>Step 2: Getting the data ready with auk</h3>
-<p>The first few functions we need to run are quite familiar already. We first need to read in our ebird data using <code>auk</code> functions:</p>
-<pre class="r"><code># read in the ebird data 
-house &lt;- read_ebd(sparrow_ebd, unique = TRUE, rollup = FALSE)</code></pre>
-<p>However, unlike before we also need to perform something called zerofilling. As mentioned before, data is input into ebird using checklists where observers note down which species they saw or did not see. It is this checklist data, contained in the sample data from <a href="3_preparing_data_for_density_map.html">tutorial 3</a> that we will use for zerofilling and ultimately, to create a presence or absence score for our spatial maps. Doing the zerofilling is quite straightforward:</p>
-<pre class="r"><code>house_zf &lt;- auk_zerofill(sparrow_ebd, sparrow_sample)</code></pre>
-<p>We can compare our two objects - <code>house</code> and <code>house_zf</code> - to see the difference this has made. Look in particular at the difference in observations and the number of rows in each <code>tibble</code>:</p>
-<pre class="r"><code># first we can compare the two objects
-house 
-house_zf 
-# lets look at the observations
-house_zf$observations # some will be zero - i.e. no birds recorded
-house_zf$sampling_events # we can also examine the sampling events too</code></pre>
-<p>Next we need to combine our checklist and sample data with the <code>collapse_zerofill</code> function. This will provide us with the data we need to make the occurrence map.</p>
-<pre class="r"><code>collapse_zerofill(house_zf) </code></pre>
-<p>Here we just ran this command as a demonstration, but we’ll actually run it for real in the next section.</p>
-</div>
-<div id="step-3-extracting-the-data-for-plotting" class="section level3">
-<h3>Step 3: Extracting the data for plotting</h3>
-<p>For this step, we are going to ultimately extract the latitude and longitude of our species observations, convert them and then end with a dataframe we can use for plotting our map. We’ll build this command up step by step.</p>
-<p>The first part we’re familiar with - zerofilling - yet this time we’re going to assign the output to an object.</p>
-<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf)</code></pre>
-<p>Here we will combine commands using the <code>%&gt;%</code> pipe command which you can <a href="https://evolutionarygenetics.github.io/Chapter2.html">find more info on here</a>. The next step, we will extract the coordinates and convert them to the coordinate reference system we will use in our map. Remember to recall the <code>checklists_sf</code> object each time in order to see the differences in what is happening here.</p>
-<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf) %&gt;%
-  # this extracts coordinates
-  st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236)</code></pre>
-<p>With our latitude and longitude transformed, we then need to do a projection on to a grid reference system, like so:</p>
-<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf) %&gt;%
+<div id="step-2-filtering-the-data" class="section level3">
+<h3>Step 2: Filtering the data</h3>
+<p>As with tutorial 4, we need to extract the data for our downstream analysis. Do take a moment to look at tutorial 4 for a refresher on what this R code is actually doing.</p>
+<pre class="r"><code># this is the zero-filled checklist bird data with the light data
+my_data_sf &lt;- my_data %&gt;%
   # this extracts coordinates
   st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236) %&gt;%
   # this projects the presence absence data across an equal area
-  st_transform(crs =&quot;+proj=laea +lat_0=44 +lon_0=-71.70&quot;) </code></pre>
-<p>If you’re checking each time, you’ll see that the main thing changing here is not the data structure, but the metainformation at the head of the data.frame that encodes the spatial data projection and specification.</p>
-<p>Next things will get a bit trickier - we are going to extract some information on the species in the dataset.</p>
-<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf) %&gt;%
-  # this extracts coordinates
-  st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236) %&gt;%
-  # this projects the presence absence data across an equal area
-  st_transform(crs =&quot;+proj=laea +lat_0=44 +lon_0=-71.70&quot;) %&gt;%
-  # this bit gets the species information
-  inner_join(ebird_taxonomy %&gt;% 
-               dplyr::select(species_code, scientific_name, common_name),
-             by = &quot;scientific_name&quot;)</code></pre>
-<p>Now the dataset has altered - we have taken the <code>ebird_taxonomy</code> data.frame and extracted the <code>species_code</code>, <code>scientific_name</code> and <code>common_name</code> columns (all of which should be self-explanatory) and then joined these using <code>inner_join</code> to our coordinate data. This is actually a bit redundant here but if we were extracting data for multiple species at once, this would allow us to separate out their data.</p>
-<p>For the final step, we will extract the data we actually are interested in from the dataset using <code>dplyr::select</code>.</p>
-<pre class="r"><code>checklists_sf &lt;- collapse_zerofill(house_zf) %&gt;%
-  # this extracts coordinates
-  st_as_sf(coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4236) %&gt;%
-  # this projects the presence absence data across an equal area
-  st_transform(crs =&quot;+proj=laea +lat_0=44 +lon_0=-71.70&quot;) %&gt;%
+  st_transform(crs =&quot;+proj=laea +lat_0=44 +lon_0=-71.70&quot;) %&gt;% 
   # this bit gets the species information
   inner_join(ebird_taxonomy %&gt;% 
                dplyr::select(species_code, scientific_name, common_name),
              by = &quot;scientific_name&quot;) %&gt;% 
   # finally we extract the data we want 
-  dplyr::select(species_code, common_name, scientific_name, species_observed)</code></pre>
-<p>If you look at <code>checklists_sf</code> now you’ll see all we have is the species names, whether or not it was observed and the latitude and longitude of the positions.</p>
+  dplyr::select(species_code, common_name, scientific_name, species_observed, light)</code></pre>
+<p>Once the data is filtered out and ready - i.e. into a table with our species names, code, whether or not the were observed at this location, the light pollution and finally the <code>geometry</code> - i.e. the latitude and longitude for each row of the data frame (i.e. each observation). We’re now ready for our spatial analysis.</p>
 </div>
-<div id="step-4-preparing-the-map" class="section level3">
-<h3>Step 4: Preparing the map</h3>
-<p>We’re nearly ready to plot our data! First we need to initialise the UK map. We do this by getting the data from the <code>naturalearth</code> dataset. We’ll also convert that from an <code>sf</code> to an <code>st</code> class object.</p>
-<pre class="r"><code># we extract the UK map data
-uk &lt;- ne_countries(country = &quot;united kingdom&quot;, scale = &quot;medium&quot;, returnclass = &quot;sf&quot;) 
-# we need to convert the uk data in one more step to make it plottable
-uk &lt;- uk %&gt;% st_geometry()</code></pre>
-<p>With this done, we need to run a few steps to make our data ready to plot. Previously with the occurence map, we plotted <strong>points</strong>. Now we’re plotting presence/absence data in pixels, so we need to convert our data to a raster format.</p>
-<pre class="r"><code>r_template &lt;- raster(as(checklists_sf, &quot;Spatial&quot;))</code></pre>
-<p>With presence/absence data for each pixel, we can set a resolution to estimate the mean probability of observing a species across a spatial area. This is also known as density. We set this resolution in units of metres but express it as km - here we will use 5000 or a 5km resolution.</p>
-<pre class="r"><code>res(r_template) &lt;- 5000</code></pre>
-<p>Then we extract species names - this is only really necessary if we are to plot more than one species (not the case here but I’ll show you how anyway):</p>
-<pre class="r"><code>species &lt;- unique(checklists_sf$species_code)</code></pre>
-<p>With our data, our raster format and our resolution we are now ready to calculate the density or frequency of occurence over our grid resolution. We’ll also make sure the orientation is correct for our UK map.</p>
-<pre class="r"><code>#  calculate the frequency of occurrence
-r_freq &lt;- rasterize(checklists_sf, r_template, field = &quot;species_observed&quot;, fun = mean)
-# correct projection
-r_freq2 &lt;- projectRaster(r_freq, crs = crs(uk))</code></pre>
-<p>In the first function, the <code>fun = mean</code> argument is what allows us to estimate the mean probability a species is observed. We could use other functions here - i.e. <code>max</code> would give the max probability, <code>median</code> the median and so on.</p>
+<div id="step-3-performing-a-spatial-analysis" class="section level3">
+<h3>Step 3: Performing a spatial analysis</h3>
+<p>First, we need to take our data and convert it to a raster object. This is really simple to do:</p>
+<pre class="r"><code># then we convert to a raster file
+r_template &lt;- raster(as(my_data_sf, &quot;Spatial&quot;))</code></pre>
+<p>This gives us presence and absence, plus light pollution indexes for each pixel. We can then estimate the ‘mean’ presence absence (somewhat meaningless - we will come to this in the next tutorial) and the mean light pollution values for our given spatial scale. As before, we will set the scale to 5000 metres or 5km.</p>
+<pre class="r"><code># we can now set the resolution of we want to visualise density with - we will go for 5km grid cells
+res(r_template) &lt;- 5000</code></pre>
+<p>Next we perform rasterization in order to calculate the mean values of light and presence absence across these grid squares.</p>
+<pre class="r"><code># next we calculate the frequency of occurrence AND the mean light data
+my_raster &lt;- rasterize(my_data_sf, r_template, field = c(&quot;light&quot;, &quot;species_observed&quot;), fun = mean)</code></pre>
+<p>With this done we are ready to take the next steps for looking at the data. To do this, we actually have to convert back from a raster to point data - i.e. as a data frame or tibble.</p>
+<pre class="r"><code># finally we convert the rasta back to points
+my_predict &lt;- rasterToPoints(my_raster) %&gt;% as_tibble()
+# this is the predicted frequency of occurrence and mean light data</code></pre>
+<p>Take a moment to look at this. What we have here is the predicted probability of occurrence in a 5km grid square (i.e. <code>species_observed</code>) and the mean light pollution values, alongside their x and y (longitude) coordinates. It is this we can use to visualise our relationships and get an estimate of the level of association between species and light.</p>
 </div>
-<div id="step-5-plotting" class="section level3">
-<h3>Step 5: Plotting</h3>
-<p>With all these steps taken, we’re now finally ready to plot. Firstly, we’ll do this in base R.</p>
-<pre class="r"><code># next we plot the frequency of occurrence data
-plot(r_freq2, las = 1, col = viridis(100))
-# and finally we can add the outline of the UK
-plot(uk, add = T)</code></pre>
-<p><img src="figure/4_drawing_a_density_map.Rmd/base_plot-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-base_plot-1">
-Past versions of base_plot-1.png
-</button>
-</p>
-<div id="fig-base_plot-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/markravinet/ebird_light_pollution/blob/74ac27dff52afb4efcd940c3140b13b2d926ae25/docs/figure/4_drawing_a_density_map.Rmd/base_plot-1.png" target="_blank">74ac27d</a>
-</td>
-<td>
-markravinet
-</td>
-<td>
-2021-11-22
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>And with <code>ggplot2</code></p>
-<pre class="r"><code>r_freq3 &lt;- r_freq2 %&gt;% rasterToPoints() %&gt;% as_tibble()
-ggplot(r_freq3) + geom_tile(aes(x = x, y = y, fill = layer)) + 
-  geom_sf(data = uk, fill = NA) + coord_sf()</code></pre>
-<p><img src="figure/4_drawing_a_density_map.Rmd/ggplot-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-ggplot-1">
-Past versions of ggplot-1.png
-</button>
-</p>
-<div id="fig-ggplot-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/markravinet/ebird_light_pollution/blob/74ac27dff52afb4efcd940c3140b13b2d926ae25/docs/figure/4_drawing_a_density_map.Rmd/ggplot-1.png" target="_blank">74ac27d</a>
-</td>
-<td>
-markravinet
-</td>
-<td>
-2021-11-22
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<div id="step-4-finishing-up" class="section level3">
+<h3>Step 4: Finishing up</h3>
+<p>We can take a look at the relationship between light pollution and whether a species is observed with a simple scatter plot. We do this using <code>ggplot2</code> like so.</p>
+<pre class="r"><code># this means we can visualise the relationship between prob of occurrence and light pollution
+my_predict %&gt;% ggplot(aes(light, species_observed)) + geom_point()</code></pre>
+<p>However this isn’t really that clear - perhaps there is a better way to do this? We shall investigate that in the final tutorial. For now we will write out the data and save it for later.</p>
+<pre class="r"><code># before we go any further - write out the data to save it!
+write_csv(my_predict, outfile)</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -813,26 +651,24 @@ other attached packages:
 [19] auk_0.5.1               workflowr_1.6.2        
 
 loaded via a namespace (and not attached):
- [1] fs_1.5.0           lubridate_1.8.0    bit64_4.0.5        httr_1.4.2        
- [5] rprojroot_2.0.2    tools_4.1.2        backports_1.3.0    utf8_1.2.2        
- [9] R6_2.5.1           KernSmooth_2.23-20 DBI_1.1.1          colorspace_2.0-2  
-[13] withr_2.4.2        tidyselect_1.1.1   gridExtra_2.3      bit_4.0.4         
-[17] compiler_4.1.2     git2r_0.28.0       cli_3.1.0          rvest_1.0.2       
-[21] xml2_1.3.2         labeling_0.4.2     scales_1.1.1       classInt_0.4-3    
-[25] proxy_0.4-26       digest_0.6.28      rmarkdown_2.11     pkgconfig_2.0.3   
-[29] htmltools_0.5.2    highr_0.9          dbplyr_2.1.1       fastmap_1.1.0     
-[33] rlang_0.4.12       readxl_1.3.1       rstudioapi_0.13    farver_2.1.0      
-[37] jquerylib_0.1.4    generics_0.1.1     jsonlite_1.7.2     vroom_1.5.5       
-[41] magrittr_2.0.1     s2_1.0.7           Rcpp_1.0.7         munsell_0.5.0     
-[45] fansi_0.5.0        lifecycle_1.0.1    terra_1.4-11       stringi_1.7.5     
-[49] whisker_0.4        yaml_2.2.1         grid_4.1.2         parallel_4.1.2    
-[53] promises_1.2.0.1   crayon_1.4.2       lattice_0.20-45    haven_2.4.3       
-[57] hms_1.1.1          knitr_1.36         pillar_1.6.4       codetools_0.2-18  
-[61] wk_0.5.0           reprex_2.0.1       glue_1.5.0         evaluate_0.14     
-[65] modelr_0.1.8       vctrs_0.3.8        tzdb_0.2.0         httpuv_1.6.3      
-[69] cellranger_1.1.0   gtable_0.3.0       assertthat_0.2.1   xfun_0.28         
-[73] broom_0.7.10       e1071_1.7-9        later_1.3.0        class_7.3-19      
-[77] units_0.7-2        ellipsis_0.3.2    </code></pre>
+ [1] httr_1.4.2         jsonlite_1.7.2     modelr_0.1.8       assertthat_0.2.1  
+ [5] cellranger_1.1.0   yaml_2.2.1         pillar_1.6.4       backports_1.3.0   
+ [9] lattice_0.20-45    glue_1.5.0         digest_0.6.28      promises_1.2.0.1  
+[13] rvest_1.0.2        colorspace_2.0-2   htmltools_0.5.2    httpuv_1.6.3      
+[17] pkgconfig_2.0.3    broom_0.7.10       haven_2.4.3        scales_1.1.1      
+[21] whisker_0.4        terra_1.4-11       later_1.3.0        tzdb_0.2.0        
+[25] git2r_0.28.0       proxy_0.4-26       generics_0.1.1     ellipsis_0.3.2    
+[29] withr_2.4.2        cli_3.1.0          magrittr_2.0.1     crayon_1.4.2      
+[33] readxl_1.3.1       evaluate_0.14      fs_1.5.0           fansi_0.5.0       
+[37] xml2_1.3.2         class_7.3-19       tools_4.1.2        hms_1.1.1         
+[41] lifecycle_1.0.1    munsell_0.5.0      reprex_2.0.1       compiler_4.1.2    
+[45] jquerylib_0.1.4    e1071_1.7-9        rlang_0.4.12       classInt_0.4-3    
+[49] units_0.7-2        grid_4.1.2         rstudioapi_0.13    rmarkdown_2.11    
+[53] codetools_0.2-18   gtable_0.3.0       DBI_1.1.1          R6_2.5.1          
+[57] gridExtra_2.3      lubridate_1.8.0    knitr_1.36         fastmap_1.1.0     
+[61] utf8_1.2.2         rprojroot_2.0.2    KernSmooth_2.23-20 stringi_1.7.5     
+[65] Rcpp_1.0.7         vctrs_0.3.8        dbplyr_2.1.1       tidyselect_1.1.1  
+[69] xfun_0.28         </code></pre>
 </div>
 </div>
 </div>
