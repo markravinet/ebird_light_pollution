@@ -19,7 +19,7 @@ The tutorials are as follows:
 3. [Preparing data for a density map](3_preparing_data_for_density_map.html)
 4. [Drawing a density map](4_drawing_a_density_map.html)
 5. [Extracting light pollution data](5_extracting_light_pollution_data.html)
-6. [Predicting bird density and light pollution](6_predicting_density_and_light_pollution.Rmd)
+6. [Predicting bird density and light pollution](6_predicting_density_and_light_pollution.html)
 
 
 Enjoy!
