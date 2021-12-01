@@ -1,0 +1,129 @@
+---
+title: 'Tutorial 5: Predicting the relationship between light pollution and density'
+output:
+  html_document: 
+    theme: simplex
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(auk)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata) # necessary to draw a detailed map
+library(rgeos)
+library(raster)
+library(rgdal)
+library(viridis)
+
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In the [last tutorial](5_extracting_light_pollution_data.html), we extracted the light pollution data for the points of occurence of our bird species. This time, we will read that data back into R and then predict the relationship between the two. There are some similarities here to what we did when we drew a density map, so it may be worth looking over [that tutorial if needed](4_drawing_a_density_map.html). 
+
+### Step 1: Installing packages and getting the data
+
+We are once again only using packages we have already worked with, so we just need to load them like so:
+
+```{r install, eval = FALSE, echo = TRUE}
+library(auk)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata) # necessary to draw a detailed map
+library(rgeos)
+library(raster)
+library(rgdal)
+library(viridis)
+```
+
+Next we need to read in the species and light pollution data we created in the last tutorial. We can set the filepath variable first. We will also set the outpath variable too.
+
+```{r filepath, eval = FALSE, echo = TRUE}
+filepath <- "./house_sparrow_light_data_2017.csv"
+outfile <- "./house_2017_light_occurrence_prediction.csv"
+```
+
+Then we just in the data like so:
+
+```{r read_data, eval = FALSE, echo = TRUE}
+my_data <- read_csv(filepath)
+```
+
+We are now ready to filter it for our analysis. We will do this in the next section.
+
+### Step 2: Filtering the data
+
+As with tutorial 4, we need to extract the data for our downstream analysis. Do take a moment to look at tutorial 4 for a refresher on what this R code is actually doing.
+
+```{r filter, eval = FALSE, echo = TRUE}
+# this is the zero-filled checklist bird data with the light data
+my_data_sf <- my_data %>%
+  # this extracts coordinates
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4236) %>%
+  # this projects the presence absence data across an equal area
+  st_transform(crs ="+proj=laea +lat_0=44 +lon_0=-71.70") %>% 
+  # this bit gets the species information
+  inner_join(ebird_taxonomy %>% 
+               dplyr::select(species_code, scientific_name, common_name),
+             by = "scientific_name") %>% 
+  # finally we extract the data we want 
+  dplyr::select(species_code, common_name, scientific_name, species_observed, light)
+```
+
+Once the data is filtered out and ready - i.e. into a table with our species names, code, whether or not the were observed at this location, the light pollution and finally the `geometry` - i.e. the latitude and longitude for each row of the data frame (i.e. each observation). We're now ready for our spatial analysis.
+
+### Step 3: Performing a spatial analysis
+
+First, we need to take our data and convert it to a raster object. This is really simple to do:
+
+```{r convert_raster, eval = FALSE, echo = TRUE}
+# then we convert to a raster file
+r_template <- raster(as(my_data_sf, "Spatial"))
+```
+
+This gives us presence and absence, plus light pollution indexes for each pixel. We can then estimate the 'mean' presence absence (somewhat meaningless - we will come to this in the next tutorial) and the mean light pollution values for our given spatial scale. As before, we will set the scale to 5000 metres or 5km. 
+
+```{r set_resolution, eval = FALSE, echo = TRUE}
+# we can now set the resolution of we want to visualise density with - we will go for 5km grid cells
+res(r_template) <- 5000
+```
+
+Next we perform rasterization in order to calculate the mean values of light and presence absence across these grid squares.
+
+```{r grid_calc, eval = FALSE, echo = TRUE}
+# next we calculate the frequency of occurrence AND the mean light data
+my_raster <- rasterize(my_data_sf, r_template, field = c("light", "species_observed"), fun = mean)
+```
+
+With this done we are ready to take the next steps for looking at the data. To do this, we actually have to convert back from a raster to point data - i.e. as a data frame or tibble.
+
+```{r convert_points, eval = FALSE, echo = TRUE}
+# finally we convert the rasta back to points
+my_predict <- rasterToPoints(my_raster) %>% as_tibble()
+# this is the predicted frequency of occurrence and mean light data
+```
+
+Take a moment to look at this. What we have here is the predicted probability of occurrence in a 5km grid square (i.e. `species_observed`) and the mean light pollution values, alongside their x and y (longitude) coordinates. It is this we can use to visualise our relationships and get an estimate of the level of association between species and light. 
+
+### Step 4: Finishing up
+
+We can take a look at the relationship between light pollution and whether a species is observed with a simple scatter plot. We do this using `ggplot2` like so.
+
+```{r plot_relationship, eval = FALSE, echo = TRUE}
+# this means we can visualise the relationship between prob of occurrence and light pollution
+my_predict %>% ggplot(aes(light, species_observed)) + geom_point()
+```
+
+However this isn't really that clear - perhaps there is a better way to do this? We shall investigate that in the final tutorial. For now we will write out the data and save it for later.
+
+```{r write_out, eval = FALSE, echo = TRUE}
+# before we go any further - write out the data to save it!
+write_csv(my_predict, outfile)
+```
+

@@ -22,11 +22,11 @@ library(viridis)
 
 ## Introduction
 
-Back in [tutorial 2](https://markravinet.github.io/2_make_a_simple_occurrence_plot.html) we learned how to make an occurrence map. Here we'll draw a map again but this time it will be a density map. In order to do that, we need to estimate density from our ebird sightings. This involves a little more work than just simply plotting occurrence! The aim of this tutorial is to take us through those steps. 
+Back in [tutorial 2](2_make_a_simple_occurrence_plot.html) we learned how to make an occurrence map. Here we'll draw a map again but this time it will be a density map. In order to do that, we need to estimate density from our ebird sightings. This involves a little more work than just simply plotting occurrence! The aim of this tutorial is to take us through those steps. 
 
 ### Step 1: Installing packages and setting up
 
-Many of the packages we used for [making the occurrence map](https://markravinet.github.io/2_make_a_simple_occurrence_plot.html) are relevant here, but there are a couple of additional ones we need to install this time. We install them like so:
+Many of the packages we used for [making the occurrence map](2_make_a_simple_occurrence_plot.html) are relevant here, but there are a couple of additional ones we need to install this time. We install them like so:
 
 ```{r install, eval = FALSE, echo = TRUE}
 install.packages("raster")
@@ -50,7 +50,7 @@ library(rgdal)
 library(viridis)
 ```
 
-The next thing we need to do is set the paths for the data files that we created at the end of [tutorial 3](https://markravinet.github.io/3_preparing_data_for_density_map.html). Remember this is our filtered sparrow occurrence and sampling data.
+The next thing we need to do is set the paths for the data files that we created at the end of [tutorial 3](3_preparing_data_for_density_map.html). Remember this is our filtered sparrow occurrence and sampling data.
 
 ```{r set_paths, eval = TRUE, echo = TRUE}
 # set paths for ebd data
@@ -69,7 +69,7 @@ The first few functions we need to run are quite familiar already. We first need
 house <- read_ebd(sparrow_ebd, unique = TRUE, rollup = FALSE)
 ```
 
-However, unlike before we also need to perform something called zerofilling. As mentioned before, data is input into ebird using checklists where observers note down which species they saw or did not see. It is this checklist data, contained in the sample data from [tutorial 3](https://markravinet.github.io/3_preparing_data_for_density_map.html) that we will use for zerofilling and ultimately, to create a presence or absence score for our spatial maps. Doing the zerofilling is quite straightforward:
+However, unlike before we also need to perform something called zerofilling. As mentioned before, data is input into ebird using checklists where observers note down which species they saw or did not see. It is this checklist data, contained in the sample data from [tutorial 3](3_preparing_data_for_density_map.html) that we will use for zerofilling and ultimately, to create a presence or absence score for our spatial maps. Doing the zerofilling is quite straightforward:
 
 ```{r zerofill, eval = TRUE, echo = TRUE}
 house_zf <- auk_zerofill(sparrow_ebd, sparrow_sample)
