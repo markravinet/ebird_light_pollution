@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Tutorial 7: Statistical analyses - logistic regression</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">ebird_light_pollution</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/markravinet/ebird_light_pollution">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Tutorial 7: Statistical analyses - logistic regression</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-12-03
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ebird_light_pollution/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20211122code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20211122)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20211122code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20211122)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontree42ddee3d6ee9eb326062393c000d087d7ab1f5f7targetblank42ddee3a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/markravinet/ebird_light_pollution/tree/42ddee3d6ee9eb326062393c000d087d7ab1f5f7" target="_blank">42ddee3</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcommarkravinetebirdlightpollutiontree42ddee3d6ee9eb326062393c000d087d7ab1f5f7targetblank42ddee3a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/markravinet/ebird_light_pollution/tree/42ddee3d6ee9eb326062393c000d087d7ab1f5f7" target="_blank">42ddee3</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    data/.DS_Store
+
+Untracked files:
+    Untracked:  data/.here
+
+Unstaged changes:
+    Deleted:    data/house_2018_light_occurrence_prediction.csv
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/7_statistical_anlalysis_of_data.Rmd</code>) and HTML (<code>docs/7_statistical_anlalysis_of_data.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/markravinet/ebird_light_pollution/blob/42ddee3d6ee9eb326062393c000d087d7ab1f5f7/analysis/7_statistical_anlalysis_of_data.Rmd" target="_blank">42ddee3</a>
+</td>
+<td>
+markravinet
+</td>
+<td>
+2021-12-03
+</td>
+<td>
+upload tutorial 7
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>For this tutorial, we finally have all of our data together in a single dataframe with the light pollution values and the mean presence/absence score for our chosen spatial resolution (5 km if you’re using the same settings as the tutorial). The next and final step is to try and quantify the relationship between light pollution and the probability a bird will occur at a given location. Read on to find out how!</p>
+<div id="step-1-setting-up" class="section level3">
+<h3>Step 1: Setting up</h3>
+<p>As always, we first load the packages we will need. Much of what we will use here is actually already part of base R so we only need to load the <code>tidyverse</code> package to help with reading in data and visualising it.</p>
+<pre class="r"><code># load the packages you need
+library(tidyverse)</code></pre>
+<p>Next we set our variable - here it is the path to the input file.</p>
+<pre class="r"><code>input_file &lt;- &quot;house_2017_light_occurrence_prediction.csv&quot;</code></pre>
+<p>Then all we need to do is read in the data. After this we’re ready to start analysing the data.</p>
+<pre class="r"><code># read in the data 
+my_data &lt;- read_csv(input_file)</code></pre>
+<pre><code>Rows: 3762 Columns: 4</code></pre>
+<pre><code>── Column specification ────────────────────────────────────────────────────────
+Delimiter: &quot;,&quot;
+dbl (4): x, y, light, species_observed</code></pre>
+<pre><code>
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div id="step-2-visualising-and-manipulating-the-data" class="section level3">
+<h3>Step 2: Visualising and manipulating the data</h3>
+<p>As always, it is good practice to plot our data to see what it shows and to have a think about it. We did this in the last tutorial, but we repeat the process here.</p>
+<pre class="r"><code>my_data %&gt;% ggplot(aes(light, species_observed)) + geom_point()</code></pre>
+<p><img src="figure/7_statistical_anlalysis_of_data.Rmd/plot_data1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># along the x-axis we have the strength of light pollution for a 5km grid square and then the frequency of 
+# occurrence within that grid square</code></pre>
+<p>This figure shows us the strength of light pollution on the x-axis (measured using the pixel brightness) and the mean presence absence score for whether or not a species was observed. At the moment, the data is really noisy and actually not that informative. In fact, it is sort of hard to really think about what a presence absence score of 0.5 actually means.</p>
+<p>The reason we get these intermediate scores is because we averaged over a 5km grid square. In some of those squares, our species of interest will be present in all of them, so the average score is 1, in some they will be absent in all of them, so the score will be 0. And then of course there are plenty of intermediate values.</p>
+<p>But does this make sense for an analysis? Well not really because what we want to test is whether light pollution affects the probability a species is present or not. From our current data, any value greater than zero indicates the species is present, so what we need to do now is alter the data so that it reflects this. We can do that like so:</p>
+<pre class="r"><code># mutate data
+my_data2 &lt;- my_data %&gt;% mutate(prob_occurrence = ifelse(species_observed &gt; 0, 1, 0))</code></pre>
+<p>Here we used the <code>dplyr</code> function <code>mutate</code> to create a new column in our data frame, the <code>prob_occurrence</code> column. Using <code>ifelse</code>, we basically say that if the value of <code>species_observed</code> is greater than 0, we set it to 1, otherwise we set it to 0. We can replot this data to get an idea of what it might look like now.</p>
+<pre class="r"><code>my_data2 %&gt;% ggplot(aes(light, prob_occurrence)) + geom_point()</code></pre>
+<p><img src="figure/7_statistical_anlalysis_of_data.Rmd/plot_data2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now we can see we only have 0 for no birds present and 1 for birds present - i.e. a simple binomial probability outcome. This means we are ready to perform a logistic regression.</p>
+</div>
+<div id="step-3-running-a-logistic-regression" class="section level3">
+<h3>Step 3: Running a logistic regression</h3>
+<p>To test whether the light index for a grid square influences the probablity of a bird species being present, we will use <a href="https://en.wikipedia.org/wiki/Logistic_regression">logistic regression</a>, which is quite straightforward in R. Let’s set it up and take a closer look</p>
+<pre class="r"><code># y ~ x
+my_model &lt;- glm(prob_occurrence ~ light, family = &quot;binomial&quot;, data = my_data2)
+# take a look at the model
+summary(my_model)</code></pre>
+<p>The function <code>glm</code> initiates the model and the <code>family = "binomial"</code> argument ensures we run a logistic regression. The key part of this call to <code>glm</code> is the formula <code>prob_occurrence ~ light</code>. This is equivalent to <code>y ~ x</code> where <code>y</code> is the dependent variable and <code>x</code> is the independent. In short we are asking, does <code>y</code> vary with <code>x</code>? This can be a little confusing in R at first as it inverts the traditional way you might have learned about how regression formula are set out, but with practice it gets easier to read. Simply put, here we are asking does the probability of occurrence of our bird species vary with the light pollution index?</p>
+<p>Finally, we call <code>summary</code> on the model to get an idea of the output. Examining this output you can see that the <code>light</code> term is highly significant. The sign of the estimate for light is also positive, which indicates there is a positive relationship between light pollution and probability of occurence. In this example it is <code>0.016</code> - this essentially means that for every unit increase in light pollution, the probability of occurrence for this species, the house sparrow in the UK, increases by 1.6%.</p>
+<p>Perhaps it is easier to understand this when we actually visualise the relationship on a figure, like we do with the code below:</p>
+<pre class="r"><code># we can also visualise the relationship
+my_data2 %&gt;%
+  ggplot(aes(light, prob_occurrence)) + geom_point() + 
+  stat_smooth(method=&quot;glm&quot;, method.args=list(family=&quot;binomial&quot;), se=FALSE)</code></pre>
+<p><img src="figure/7_statistical_anlalysis_of_data.Rmd/visualise1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So you can see from this, a quite positive slope indicating that probability of occurence increases with light pollution.</p>
+<p><strong>NB</strong> if you have a very large number of observations, it might take some time to plot this relationship. So it might be helpful to <strong>subsample</strong> your data, i.e. reducing it to a lower number of randomly sampled observations in order to make it much easier to visualise.</p>
+<p>You can do this by adding the <code>sample_frac</code> function to the code we ran previously. Like so:</p>
+<pre class="r"><code># we can also visualise the relationship
+my_data2 %&gt;%
+  sample_frac(0.1) %&gt;%
+  ggplot(aes(light, prob_occurrence)) + geom_point() + 
+  stat_smooth(method=&quot;glm&quot;, method.args=list(family=&quot;binomial&quot;), se=FALSE)</code></pre>
+<p><img src="figure/7_statistical_anlalysis_of_data.Rmd/visualise2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Note that here we sample just 10% of our original data but we still get the same relationship. It is important to note however this should only be done for visualisation, the actual models should be run on the full dataset.</p>
+<p>And that’s it! We’ve now gone all the way from extracting our spatial data to actually running through a logistic regression and visualising the relationship. Congratulations!</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.2 (2021-11-01)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Catalina 10.15.7
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_GB.UTF-8/en_GB.UTF-8/en_GB.UTF-8/C/en_GB.UTF-8/en_GB.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] viridis_0.6.2           viridisLite_0.4.0       rgdal_1.5-27           
+ [4] raster_3.5-2            rgeos_0.5-8             sp_1.4-5               
+ [7] rnaturalearthdata_0.1.0 rnaturalearth_0.1.0     sf_1.0-3               
+[10] forcats_0.5.1           stringr_1.4.0           dplyr_1.0.7            
+[13] purrr_0.3.4             readr_2.0.2             tidyr_1.1.4            
+[16] tibble_3.1.5            ggplot2_3.3.5           tidyverse_1.3.1        
+[19] auk_0.5.1               workflowr_1.6.2        
+
+loaded via a namespace (and not attached):
+ [1] nlme_3.1-153       fs_1.5.0           lubridate_1.8.0    bit64_4.0.5       
+ [5] httr_1.4.2         rprojroot_2.0.2    tools_4.1.2        backports_1.3.0   
+ [9] utf8_1.2.2         R6_2.5.1           KernSmooth_2.23-20 mgcv_1.8-38       
+[13] DBI_1.1.1          colorspace_2.0-2   withr_2.4.2        tidyselect_1.1.1  
+[17] gridExtra_2.3      bit_4.0.4          compiler_4.1.2     git2r_0.28.0      
+[21] cli_3.1.0          rvest_1.0.2        xml2_1.3.2         labeling_0.4.2    
+[25] scales_1.1.1       classInt_0.4-3     proxy_0.4-26       digest_0.6.28     
+[29] rmarkdown_2.11     pkgconfig_2.0.3    htmltools_0.5.2    highr_0.9         
+[33] dbplyr_2.1.1       fastmap_1.1.0      rlang_0.4.12       readxl_1.3.1      
+[37] rstudioapi_0.13    farver_2.1.0       jquerylib_0.1.4    generics_0.1.1    
+[41] jsonlite_1.7.2     vroom_1.5.5        magrittr_2.0.1     Matrix_1.3-4      
+[45] Rcpp_1.0.7         munsell_0.5.0      fansi_0.5.0        lifecycle_1.0.1   
+[49] terra_1.4-11       stringi_1.7.5      whisker_0.4        yaml_2.2.1        
+[53] grid_4.1.2         parallel_4.1.2     promises_1.2.0.1   crayon_1.4.2      
+[57] lattice_0.20-45    splines_4.1.2      haven_2.4.3        hms_1.1.1         
+[61] knitr_1.36         pillar_1.6.4       codetools_0.2-18   reprex_2.0.1      
+[65] glue_1.5.0         evaluate_0.14      modelr_0.1.8       vctrs_0.3.8       
+[69] tzdb_0.2.0         httpuv_1.6.3       cellranger_1.1.0   gtable_0.3.0      
+[73] assertthat_0.2.1   xfun_0.28          broom_0.7.10       e1071_1.7-9       
+[77] later_1.3.0        class_7.3-19       units_0.7-2        ellipsis_0.3.2    </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
