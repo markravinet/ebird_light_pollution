@@ -1,0 +1,126 @@
+---
+title: 'Tutorial 7: Statistical analyses - logistic regression'
+output:
+  html_document: 
+    theme: simplex
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(auk)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata) # necessary to draw a detailed map
+library(rgeos)
+library(raster)
+library(rgdal)
+library(viridis)
+
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+For this tutorial, we finally have all of our data together in a single dataframe with the light pollution values and the mean presence/absence score for our chosen spatial resolution (5 km if you're using the same settings as the tutorial). The next and final step is to try and quantify the relationship between light pollution and the probability a bird will occur at a given location. Read on to find out how!
+
+### Step 1: Setting up
+
+As always, we first load the packages we will need. Much of what we will use here is actually already part of base R so we only need to load the `tidyverse` package to help with reading in data and visualising it.
+
+```{r setup_code, eval = FALSE, echo = TRUE}
+# load the packages you need
+library(tidyverse)
+```
+
+Next we set our variable - here it is the path to the input file.
+
+```{r variable1, eval = TRUE, echo = FALSE, message = FALSE}
+# actually run
+input_file <- "./data/house_2017_light_occurrence_prediction.csv"
+```
+
+```{r variable2, eval = FALSE, echo = TRUE}
+input_file <- "house_2017_light_occurrence_prediction.csv"
+```
+
+Then all we need to do is read in the data. After this we're ready to start analysing the data.
+
+```{r read_data, eval = TRUE, echo = TRUE}
+# read in the data 
+my_data <- read_csv(input_file)
+```
+
+### Step 2: Visualising and manipulating the data
+
+As always, it is good practice to plot our data to see what it shows and to have a think about it. We did this in the last tutorial, but we repeat the process here.
+
+```{r plot_data1, eval = TRUE, echo = TRUE}
+my_data %>% ggplot(aes(light, species_observed)) + geom_point()
+# along the x-axis we have the strength of light pollution for a 5km grid square and then the frequency of 
+# occurrence within that grid square
+```
+
+This figure shows us the strength of light pollution on the x-axis (measured using the pixel brightness) and the mean presence absence score for whether or not a species was observed. At the moment, the data is really noisy and actually not that informative. In fact, it is sort of hard to really think about what a presence absence score of 0.5 actually means. 
+
+The reason we get these intermediate scores is because we averaged over a 5km grid square. In some of those squares, our species of interest will be present in all of them, so the average score is 1, in some they will be absent in all of them, so the score will be 0. And then of course there are plenty of intermediate values. 
+
+But does this make sense for an analysis? Well not really because what we want to test is whether light pollution affects the probability a species is present or not. From our current data, any value greater than zero indicates the species is present, so what we need to do now is alter the data so that it reflects this. We can do that like so:
+
+```{r mutate_data, eval = TRUE, echo = TRUE}
+# mutate data
+my_data2 <- my_data %>% mutate(prob_occurrence = ifelse(species_observed > 0, 1, 0))
+```
+
+Here we used the `dplyr` function `mutate` to create a new column in our data frame, the `prob_occurrence` column. Using `ifelse`, we basically say that if the value of `species_observed` is greater than 0, we set it to 1, otherwise we set it to 0. We can replot this data to get an idea of what it might look like now. 
+
+```{r plot_data2, eval = TRUE, echo = TRUE}
+my_data2 %>% ggplot(aes(light, prob_occurrence)) + geom_point()
+```
+
+Now we can see we only have 0 for no birds present and 1 for birds present - i.e. a simple binomial probability outcome. This means we are ready to perform a logistic regression.
+
+### Step 3: Running a logistic regression
+
+To test whether the light index for a grid square influences the probablity of a bird species being present, we will use [logistic regression](https://en.wikipedia.org/wiki/Logistic_regression), which is quite straightforward in R. Let's set it up and take a closer look
+
+```{r logistic_regression1, eval = FALSE, echo = TRUE}
+# y ~ x
+my_model <- glm(prob_occurrence ~ light, family = "binomial", data = my_data2)
+# take a look at the model
+summary(my_model)
+```
+
+The function `glm` initiates the model and the `family = "binomial"` argument ensures we run a logistic regression. The key part of this call to `glm` is the formula `prob_occurrence ~ light`. This is equivalent to `y ~ x` where `y` is the dependent variable and `x` is the independent. In short we are asking, does `y` vary with `x`? This can be a little confusing in R at first as it inverts the traditional way you might have learned about how regression formula are set out, but with practice it gets easier to read. Simply put, here we are asking does the probability of occurrence of our bird species vary with the light pollution index?
+
+Finally, we call `summary` on the model to get an idea of the output. Examining this output you can see that the `light` term is highly significant. The sign of the estimate for light is also positive, which indicates there is a positive relationship between light pollution and probability of occurence. In this example it is `0.016` - this essentially means that for every unit increase in light pollution, the probability of occurrence for this species, the house sparrow in the UK, increases by 1.6%.
+
+Perhaps it is easier to understand this when we actually visualise the relationship on a figure, like we do with the code below:
+
+```{r visualise1, eval = TRUE, echo = TRUE, message = FALSE}
+# we can also visualise the relationship
+my_data2 %>%
+  ggplot(aes(light, prob_occurrence)) + geom_point() + 
+  stat_smooth(method="glm", method.args=list(family="binomial"), se=FALSE)
+```
+
+So you can see from this, a quite positive slope indicating that probability of occurence increases with light pollution.
+
+**NB** if you have a very large number of observations, it might take some time to plot this relationship. So it might be helpful to **subsample** your data, i.e. reducing it to a lower number of randomly sampled observations in order to make it much easier to visualise.
+
+You can do this by adding the `sample_frac` function to the code we ran previously. Like so:
+
+```{r visualise2, eval = TRUE, echo = TRUE, message = FALSE}
+# we can also visualise the relationship
+my_data2 %>%
+  sample_frac(0.1) %>%
+  ggplot(aes(light, prob_occurrence)) + geom_point() + 
+  stat_smooth(method="glm", method.args=list(family="binomial"), se=FALSE)
+```
+
+Note that here we sample just 10% of our original data but we still get the same relationship. It is important to note however this should only be done for visualisation, the actual models should be run on the full dataset. 
+
+And that's it! We've now gone all the way from extracting our spatial data to actually running through a logistic regression and visualising the relationship. Congratulations!
+
